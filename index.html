@@ -40,22 +40,42 @@
         <p id="lobby-status" role="status">첫 클릭이나 키 입력으로 시작</p>
         <button id="lobby-toggle" aria-label="대기 음악 켜기" aria-pressed="false"><svg aria-hidden="true"><use href="#i-play"/></svg><span id="lobby-toggle-label">켜기</span></button>
       </div>
-      <section class="disc-selector" id="disc-selector" aria-label="CD 플레이어 곡 선택" aria-roledescription="carousel" aria-describedby="disc-navigation-help">
+      <section class="disc-selector" id="disc-selector" aria-label="LP 턴테이블 곡 선택" aria-roledescription="carousel" aria-describedby="disc-navigation-help">
         <div class="deck-scene">
           <div class="scene-grid" aria-hidden="true"></div>
           <div class="cd-player art-column">
-            <div class="deck-topline"><span>PULSE <b>CD—04</b></span><span class="deck-power"><i></i> POWER</span></div>
+            <div class="deck-topline"><span>PULSE <b>DIRECT DRIVE / 01</b></span><span class="deck-power"><i></i> POWER</span></div>
             <div class="disc-well" aria-hidden="true"><span class="well-ring"></span></div>
+            <div class="deck-rail" aria-hidden="true"><span>33⅓ / RPM</span><i class="speed-dial"></i></div>
+            <span class="deck-strobe" aria-hidden="true"></span>
             <div class="deck-readout"><span id="cover-badge" class="deck-type">PULSE ORIGINAL</span><strong id="deck-title">AFTERGLOW</strong><span id="deck-state">READY</span></div>
             <div class="deck-controls"><button id="track-previous" class="deck-arrow" aria-label="이전 곡 선택"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button><button id="preview-button" class="preview-button" aria-label="AFTERGLOW 음악 미리듣기" aria-pressed="false"><svg aria-hidden="true"><use href="#i-play"/></svg><span id="preview-label">미리듣기</span><div class="mini-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div></button><button id="track-next" class="deck-arrow" aria-label="다음 곡 선택"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
             <span class="deck-screw screw-left" aria-hidden="true"></span><span class="deck-screw screw-right" aria-hidden="true"></span>
           </div>
+          <svg class="tonearm" viewBox="0 0 160 280" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="arm-metal" x1="0" x2="1"><stop stop-color="#697178"/><stop offset=".28" stop-color="#f7fafb"/><stop offset=".55" stop-color="#c9d0d4"/><stop offset=".8" stop-color="#818c93"/><stop offset="1" stop-color="#e6ebed"/></linearGradient>
+              <linearGradient id="arm-head" x1="0" x2="1" y2="1"><stop stop-color="#555e63"/><stop offset=".45" stop-color="#252b2f"/><stop offset="1" stop-color="#0a0d10"/></linearGradient>
+            </defs>
+            <circle cx="127" cy="30" r="24" fill="#090c0e" stroke="#626b70" stroke-width="2"/>
+            <circle cx="127" cy="30" r="17" fill="url(#arm-metal)"/>
+            <g class="tonearm-wand">
+              <path d="M127 20V150L69 214" fill="none" stroke="#050709" stroke-opacity=".5" stroke-width="15" transform="translate(4 5)"/>
+              <path d="M127 20V150L69 214" fill="none" stroke="url(#arm-metal)" stroke-width="10"/>
+              <rect x="114" y="5" width="26" height="43" rx="4" fill="url(#arm-metal)" stroke="#60686c" stroke-width="1"/>
+              <path d="m73 194 18 16-35 42-21-18Z" fill="url(#arm-head)" stroke="#909b9f" stroke-width="1.5"/>
+              <path d="m65 207 12 10-21 24-12-10Z" fill="#13191c"/>
+              <path d="m48 245-9 12" stroke="#e5e9dc" stroke-width="3"/>
+              <path d="m75 198 20 17" stroke="#e6ebed" stroke-width="3"/>
+              <circle cx="127" cy="29" r="4" fill="#4b555c"/>
+            </g>
+          </svg>
           <div class="disc-rack" role="group" aria-label="곡 커버 선택">
             <button id="builtin-track" data-builtin-track="afterglow" data-disc-card class="disc-card" data-position="0" style="--slot:0;--tilt:0deg" aria-pressed="true" aria-label="기본 곡 AFTERGLOW 선택"><span class="disc-card-art"><img src="/assets/afterglow.svg" alt="" width="800" height="800"><span class="disc-gloss"></span><span class="disc-hub"></span></span><span class="disc-card-caption"><span class="track-index">01 / ORIGINAL</span><strong>AFTERGLOW</strong><small>PULSE LAB · 148 BPM</small></span><span class="selection-label" hidden>SELECTED</span></button>
             <button id="tidal-track" data-builtin-track="tidal-circuit" data-disc-card class="disc-card" data-position="1" style="--slot:1;--tilt:12deg" aria-pressed="false" aria-label="오리지널 곡 TIDAL CIRCUIT 선택"><span class="disc-card-art"><img src="/assets/tidal-circuit.svg" alt="" width="800" height="800"><span class="disc-gloss"></span><span class="disc-hub"></span></span><span class="disc-card-caption"><span class="track-index">02 / ORIGINAL</span><strong>TIDAL CIRCUIT</strong><small>PULSE LAB · 132 BPM</small></span><span class="selection-label" hidden>선택하기</span></button>
           </div>
         </div>
-        <div class="disc-navigation"><span class="disc-counter"><strong id="disc-current">01</strong><span>/</span><span id="tracklist-count">02</span></span><p id="disc-navigation-help"><kbd>←</kbd><kbd>→</kbd> 곡 선택 <span>·</span><kbd class="enter-hint">↵</kbd> 플레이 시작</p><span class="disc-ready"><i class="status-dot"></i> DISC LOADED</span></div>
+        <div class="disc-navigation"><span class="disc-counter"><strong id="disc-current">01</strong><span>/</span><span id="tracklist-count">02</span></span><p id="disc-navigation-help"><kbd>←</kbd><kbd>→</kbd> 곡 선택 <span>·</span><kbd class="enter-hint">↵</kbd> 플레이 시작</p><span class="disc-ready"><i class="status-dot"></i> VINYL LOADED</span></div>
         <p id="disc-selection-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
       </section>
       <div class="track-details selected-track-details">
