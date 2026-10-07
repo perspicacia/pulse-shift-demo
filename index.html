@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101214">
+  <meta name="description" content="PULSE SHIFT — 4키 오리지널 리듬 게임. D F J K로 비트에 들어가세요.">
+  <title>PULSE SHIFT · 4 KEY RHYTHM</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23d5ff56'/%3E%3Cpath d='M5 21h7l4-11 6 20 4-9h9' fill='none' stroke='%23101214' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/track-selector.css">
+  <link rel="stylesheet" href="/playfield.css">
+  <script type="module" src="/src/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">게임 화면으로 이동</a>
+  <svg class="svg-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M2 12h4l3-8 5 16 3-8h5"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M5 3v18M12 3v18M19 3v18M2 8h6M9 16h6M16 9h6"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M4 14v-3a8 8 0 0 1 16 0v3M4 13H2v7h5v-7Zm16 0h2v7h-5v-7Z"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M6 9h1m4 0h1m4 0h1M6 13h1m4 0h1m4 0h1M7 16h10"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  </svg>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="PULSE SHIFT 홈"><svg class="brand-mark" aria-hidden="true"><use href="#i-wave"/></svg><span class="brand-type"><img class="brand-wordmark" src="/assets/pulse-shift-wordmark.svg" alt="" aria-hidden="true" width="730" height="112"><small>RHYTHM IS EVERYTHING</small></span></a>
+    <div class="header-center"><span class="status-dot"></span><span id="header-key-count">4 KEY RHYTHM EXPERIENCE</span></div>
+    <div class="header-actions"><span class="version-tag">VOL. 01</span><button class="icon-button" id="help-button" aria-label="플레이 방법"><svg aria-hidden="true"><use href="#i-key"/></svg></button><button class="icon-button" id="settings-button" aria-label="게임 설정"><svg aria-hidden="true"><use href="#i-settings"/></svg></button></div>
+  </header>
+
+  <main id="main">
+    <section id="menu-screen" class="screen menu-screen" aria-labelledby="menu-heading">
+      <div class="section-heading"><div><p class="eyebrow"><span class="slash">//</span> FIND YOUR FREQUENCY</p><h1 id="menu-heading">TRACK SELECT<span class="heading-dot">.</span></h1></div><div class="collection-label"><span class="tiny-line"></span> <span id="collection-name">DISC COLLECTION</span> <span id="collection-count" class="muted">/ 02</span></div></div>
+      <div class="lobby-music" id="lobby-music" data-state="idle" role="group" aria-label="대기 음악 NEON HALO">
+        <span class="lobby-signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <div class="lobby-title"><span>LOBBY RADIO</span><strong>NEON HALO</strong></div>
+        <p id="lobby-status" role="status">첫 클릭이나 키 입력으로 시작</p>
+        <button id="lobby-toggle" aria-label="대기 음악 켜기" aria-pressed="false"><svg aria-hidden="true"><use href="#i-play"/></svg><span id="lobby-toggle-label">켜기</span></button>
+      </div>
+      <section class="disc-selector" id="disc-selector" aria-label="CD 플레이어 곡 선택" aria-roledescription="carousel" aria-describedby="disc-navigation-help">
+        <div class="deck-scene">
+          <div class="scene-grid" aria-hidden="true"></div>
+          <div class="cd-player art-column">
+            <div class="deck-topline"><span>PULSE <b>CD—04</b></span><span class="deck-power"><i></i> POWER</span></div>
+            <div class="disc-well" aria-hidden="true"><span class="well-ring"></span></div>
+            <div class="deck-readout"><span id="cover-badge" class="deck-type">PULSE ORIGINAL</span><strong id="deck-title">AFTERGLOW</strong><span id="deck-state">READY</span></div>
+            <div class="deck-controls"><button id="track-previous" class="deck-arrow" aria-label="이전 곡 선택"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button><button id="preview-button" class="preview-button" aria-label="AFTERGLOW 음악 미리듣기" aria-pressed="false"><svg aria-hidden="true"><use href="#i-play"/></svg><span id="preview-label">미리듣기</span><div class="mini-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div></button><button id="track-next" class="deck-arrow" aria-label="다음 곡 선택"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+            <span class="deck-screw screw-left" aria-hidden="true"></span><span class="deck-screw screw-right" aria-hidden="true"></span>
+          </div>
+          <div class="disc-rack" role="group" aria-label="곡 커버 선택">
+            <button id="builtin-track" data-builtin-track="afterglow" data-disc-card class="disc-card" data-position="0" style="--slot:0;--tilt:0deg" aria-pressed="true" aria-label="기본 곡 AFTERGLOW 선택"><span class="disc-card-art"><img src="/assets/afterglow.svg" alt="" width="800" height="800"><span class="disc-gloss"></span><span class="disc-hub"></span></span><span class="disc-card-caption"><span class="track-index">01 / ORIGINAL</span><strong>AFTERGLOW</strong><small>PULSE LAB · 148 BPM</small></span><span class="selection-label" hidden>SELECTED</span></button>
+            <button id="tidal-track" data-builtin-track="tidal-circuit" data-disc-card class="disc-card" data-position="1" style="--slot:1;--tilt:12deg" aria-pressed="false" aria-label="오리지널 곡 TIDAL CIRCUIT 선택"><span class="disc-card-art"><img src="/assets/tidal-circuit.svg" alt="" width="800" height="800"><span class="disc-gloss"></span><span class="disc-hub"></span></span><span class="disc-card-caption"><span class="track-index">02 / ORIGINAL</span><strong>TIDAL CIRCUIT</strong><small>PULSE LAB · 132 BPM</small></span><span class="selection-label" hidden>선택하기</span></button>
+          </div>
+        </div>
+        <div class="disc-navigation"><span class="disc-counter"><strong id="disc-current">01</strong><span>/</span><span id="tracklist-count">02</span></span><p id="disc-navigation-help"><kbd>←</kbd><kbd>→</kbd> 곡 선택 <span>·</span><kbd class="enter-hint">↵</kbd> 플레이 시작</p><span class="disc-ready"><i class="status-dot"></i> DISC LOADED</span></div>
+        <p id="disc-selection-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+      </section>
+      <div class="track-details selected-track-details">
+        <div class="selected-track-copy">
+          <div class="track-tags"><span id="track-source" class="tag tag-accent">ORIGINAL</span><span id="track-genre" class="genre-tag">ELECTRO / SYNTHWAVE</span></div>
+          <h2 id="track-title">AFTERGLOW</h2><p id="track-artist" class="artist">PULSE LAB <span>— ORIGINAL MIX</span></p>
+          <p id="track-description" class="track-description">끝나지 않는 잔광, 다시 시작되는 비트.<br>신스의 파동 위로 당신만의 리듬을 새겨보세요.</p>
+          <div class="track-stats"><div><span id="bpm-heading">BPM</span><strong id="bpm-label">148</strong></div><div><span>DURATION</span><strong id="duration-label">01:07</strong></div><div><span>MODE</span><strong id="menu-key-count">4 KEY</strong></div></div>
+        </div>
+        <div class="play-options">
+          <div class="key-mode-picker" role="group" aria-label="키 개수 선택"><button class="secondary-button" data-key-count="4" aria-pressed="true">4 KEY · 기본</button><button class="secondary-button" data-key-count="6" aria-pressed="false">6 KEY · 실험</button></div><p id="mode-hint" class="small-copy">4키 기본 · 6키 실험은 AFTERGLOW LEVEL 1만 지원합니다.</p>
+          <div class="difficulty-heading"><span class="label">DIFFICULTY</span><span class="small-copy" id="note-count">노트 준비 중</span></div>
+          <div class="difficulty-picker" role="group" aria-label="난이도 선택"><button data-difficulty="easy" aria-label="레벨 1 여유롭게" aria-pressed="false"><span>LEVEL 1</span><strong>01 <small>여유롭게</small></strong><div class="difficulty-bars" aria-hidden="true"><i></i><i></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i></div></button><button data-difficulty="normal" aria-label="레벨 2 리듬 있게" aria-pressed="true"><span>LEVEL 2</span><strong>02 <small>리듬 있게</small></strong><div class="difficulty-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i class="off"></i><i class="off"></i><i class="off"></i></div></button><button data-difficulty="hard" aria-label="레벨 3 도전하기" aria-pressed="false"><span>LEVEL 3</span><strong>03 <small>도전하기</small></strong><div class="difficulty-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></button></div>
+          <div class="best-record"><div><span class="label">PERSONAL BEST</span><strong id="best-score">—</strong></div><span class="best-grade" id="best-grade">NO RECORD</span></div>
+          <button id="start-button" class="primary-button start-button"><span><small>READY TO FEEL IT?</small><strong id="start-label">플레이 시작</strong></span><span class="start-shortcut">ENTER</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <p class="start-hint"><svg aria-hidden="true"><use href="#i-headphones"/></svg>헤드폰을 쓰면 비트가 더 선명해져요.</p>
+          <p id="menu-error" class="error-message" role="alert" hidden></p>
+        </div>
+      </div>
+      <div class="setup-strip"><div class="setup-keybinds"><svg aria-hidden="true"><use href="#i-key"/></svg><span class="label">KEY BINDING</span><div class="key-row"><kbd>D</kbd><kbd>F</kbd><span class="key-gap"></span><kbd>J</kbd><kbd>K</kbd></div></div><div class="setup-speed"><span class="label">NOTE SPEED</span><button id="speed-minus" aria-label="노트 속도 낮추기">−</button><strong id="speed-value">× 3.0</strong><button id="speed-plus" aria-label="노트 속도 높이기">+</button></div><button id="sync-button" class="setup-sync"><span class="label">SYNC OFFSET</span><strong id="offset-value">0 ms</strong><svg aria-hidden="true"><use href="#i-settings"/></svg></button></div>
+    </section>
+
+    <section id="game-screen" class="screen game-screen" aria-labelledby="game-heading" hidden>
+      <div class="game-backdrop" aria-hidden="true"><img id="stage-cover" src="/assets/afterglow.svg" alt="" width="800" height="800"></div>
+      <div class="game-topline"><div><span class="eyebrow">NOW PLAYING</span><h1 id="game-heading"><span id="game-title">AFTERGLOW</span> <span id="game-difficulty" class="tag tag-accent">LEVEL 2</span></h1></div><button id="pause-button" class="secondary-button"><svg aria-hidden="true"><use href="#i-pause"/></svg>일시정지 <kbd>ESC</kbd></button></div>
+      <div class="play-layout">
+        <aside class="play-song"><img data-cover src="/assets/afterglow.svg" alt="AFTERGLOW 앨범 아트" width="280" height="280"><p id="play-source" class="eyebrow">PULSE ORIGINAL / 001</p><h2 id="play-title">AFTERGLOW</h2><p id="play-artist" class="muted">PULSE LAB</p><div class="play-song-meta"><span id="play-bpm">148 BPM</span><span id="play-key-count">4 KEY</span></div><div class="play-tip"><svg aria-hidden="true"><use href="#i-wave"/></svg><p>판정선에 닿는 순간,<br>비트와 함께 눌러주세요.</p></div><span class="small-copy">화면을 떠나면 자동으로 일시정지됩니다.</span></aside>
+        <div class="stage-wrap"><div class="stage-top"><span id="stage-key-count">4 KEY</span><span id="stage-speed">SPEED ×3.0</span></div><div class="stage"><canvas id="game-canvas" aria-label="4개 레인으로 노트가 내려오는 게임 화면. D F J K 키로 플레이하세요."></canvas><div class="stage-feedback" aria-hidden="true"><span id="judgment-label"></span><strong id="combo-label"></strong><small id="combo-caption"></small><span id="timing-label"></span></div><div id="celebration-banner" class="celebration-banner" role="status" aria-live="polite" aria-atomic="true" hidden><span class="celebration-stars" aria-hidden="true">✦ &nbsp; ✦ &nbsp; ✦</span><strong id="celebration-title">10 COMBO!</strong><small id="celebration-caption"></small></div><div id="countdown" class="countdown" aria-live="polite"></div><div class="lane-controls" role="group" aria-label="레인 입력"><button data-lane="0" aria-label="첫 번째 레인 D">D</button><button data-lane="1" aria-label="두 번째 레인 F">F</button><button data-lane="2" aria-label="세 번째 레인 J">J</button><button data-lane="3" aria-label="네 번째 레인 K">K</button></div></div><div class="stage-bottom"><span id="play-elapsed">00:00</span><div class="progress-track"><span id="play-progress"></span></div><span id="play-duration">01:07</span></div></div>
+        <aside class="play-score"><span class="label">SCORE</span><strong id="live-score" class="live-score">0000000</strong><div class="accuracy-block"><span class="label">ACCURACY</span><strong id="live-accuracy">100.00<small>%</small></strong></div><div class="max-combo-block"><span class="label">MAX COMBO</span><strong id="live-max-combo">0</strong></div><div class="perfect-charge-block"><div><span class="label">COMBO REWARD</span><strong id="combo-charge-value">0 / 10</strong></div><div id="combo-charge" class="perfect-charge" role="progressbar" aria-label="다음 콤보 보상까지의 연속 입력" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p>첫 10콤보 · 이후 50콤보마다, 곡당 한 번씩</p></div><div class="live-counts"><div class="perfect"><span>PERFECT</span><strong id="count-perfect">0</strong></div><div class="great"><span>GREAT</span><strong id="count-great">0</strong></div><div class="good"><span>GOOD</span><strong id="count-good">0</strong></div><div class="miss"><span>MISS</span><strong id="count-miss">0</strong></div></div><div class="timing-scale"><span class="label">TIMING</span><div class="timing-track"><span></span><i id="timing-marker"></i></div><div><span>EARLY</span><span>LATE</span></div></div></aside>
+      </div>
+    </section>
+
+    <section id="result-screen" class="screen result-screen" aria-labelledby="result-heading" hidden>
+      <div class="section-heading"><div><p class="eyebrow"><span class="slash">//</span> EVERY BEAT COUNTS</p><h1 id="result-heading">TRACK COMPLETE<span class="heading-dot">.</span></h1></div><span id="result-difficulty" class="tag tag-accent">LEVEL 2</span></div>
+      <div class="result-card"><div class="result-art"><img data-cover src="/assets/afterglow.svg" alt="AFTERGLOW 앨범 아트" width="400" height="400"><div><p id="result-song-meta" class="eyebrow">PULSE LAB / 148 BPM</p><h2 id="result-title">AFTERGLOW</h2></div></div><div class="result-details"><div class="result-grade-line"><span id="result-grade" class="result-grade">A</span><div><span class="eyebrow">YOUR PERFORMANCE</span><h2 id="result-message">좋은 리듬이었어요.</h2><span id="new-record" class="tag tag-accent" hidden>NEW PERSONAL BEST</span></div></div><div class="result-score-line"><div><span class="label">TOTAL SCORE</span><strong id="result-score">0</strong></div><div><span class="label">ACCURACY</span><strong id="result-accuracy">0%</strong></div></div><div class="result-counts"><div><span>PERFECT</span><strong id="result-perfect">0</strong></div><div><span>GREAT</span><strong id="result-great">0</strong></div><div><span>GOOD</span><strong id="result-good">0</strong></div><div><span>MISS</span><strong id="result-miss">0</strong></div></div><div class="result-extra"><span>MAX COMBO <strong id="result-combo">0</strong></span><span id="clear-status">TRACK FINISHED</span></div><div class="result-actions"><button id="return-button" class="secondary-button">곡 선택으로</button><button id="retry-button" class="primary-button">다시 플레이<svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div></div></div>
+    </section>
+  </main>
+  <footer class="footer"><span>PULSE SHIFT <span class="muted">/</span> FIRST CONTACT</span><span>비트가 시작되는 곳, 당신의 손끝.</span><span>PROTOTYPE <span class="muted">0.6.0</span></span></footer>
+
+  <dialog id="settings-dialog" class="modal" aria-labelledby="settings-heading"><div class="modal-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h2 id="settings-heading">플레이 설정</h2></div><button class="icon-button" data-close aria-label="설정 닫기"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div><div class="setting-field"><label for="volume-input">음악 볼륨 <output id="volume-output">65%</output></label><input id="volume-input" type="range" min="0" max="100" step="1" value="65"></div><div class="setting-field"><label for="effects-volume-input">타격음 <output id="effects-volume-output">70%</output></label><input id="effects-volume-input" type="range" min="0" max="100" step="1" value="70"><div class="combo-preview-row"><p>음정 없는 짧은 타격음. 곡 음량에 맞춰 강도가 조절돼요.</p><button id="hit-preview-button" class="secondary-button" aria-label="타격음 미리듣기"><svg aria-hidden="true"><use href="#i-play"/></svg>타격음 듣기</button></div></div>
+  <div class="setting-field"><label for="lobby-volume-input">대기 음악 볼륨 <output id="lobby-volume-output">30%</output></label><input id="lobby-volume-input" type="range" min="0" max="100" step="1" value="30" aria-describedby="lobby-guide"><p id="lobby-guide">NEON HALO · 첫 화면에서 흐르는 오리지널 신스 루프.<br>미리듣기와 플레이 중에는 잠시 멈춰요.</p></div>
+  <div class="setting-field"><label for="combo-volume-input">콤보 효과음 볼륨 <output id="combo-volume-output">80%</output></label><input id="combo-volume-input" type="range" min="0" max="100" step="1" value="80" aria-describedby="combo-guide"><p id="combo-guide">첫 10콤보, 이후 50·100·150콤보에서만 재생<br>같은 구간은 곡당 한 번 · 짧은 전자 효과음</p><div class="combo-preview-buttons" role="group" aria-label="콤보 효과음 미리듣기"><button id="combo-preview-button" data-combo-preview="light" class="secondary-button" aria-label="콤보 효과음 미리듣기"><svg aria-hidden="true"><use href="#i-play"/></svg>10콤보 듣기</button><button id="combo-major-preview-button" data-combo-preview="major" class="secondary-button" aria-label="50콤보 이상 효과음 미리듣기"><svg aria-hidden="true"><use href="#i-play"/></svg>50콤보 이상 듣기</button></div></div>
+  <div class="setting-field"><label for="effect-intensity-input">타격 이펙트 강도 <output id="effect-intensity-output">100%</output></label><input id="effect-intensity-input" type="range" min="0" max="100" step="10" value="100"><p>0%로 설정하면 입자와 팝 애니메이션이 꺼져요. 시스템의 동작 줄이기 설정도 적용돼요.</p></div>
+  <div class="setting-field"><label for="speed-input">노트 속도 <output id="speed-output">×3.0</output></label><input id="speed-input" type="range" min="1" max="6" step="0.5" value="3"><p>속도는 노트가 내려오는 빠르기만 바꿔요. 음악과 판정은 동일해요.</p></div><div class="setting-field"><label for="offset-input">싱크 보정 <output id="offset-output">0 ms</output></label><input id="offset-input" type="range" min="-200" max="200" step="5" value="0"><p>양수는 판정 시점을 늦춰요. 소리를 듣고 눌렀을 때 LATE가 반복되면 양수로 조정해보세요.</p></div><div class="settings-keys"><span id="settings-key-count" class="label">4 KEY LAYOUT</span><div class="key-row"><kbd>D</kbd><kbd>F</kbd><span class="key-gap"></span><kbd>J</kbd><kbd>K</kbd></div></div><p class="modal-footnote">설정은 이 브라우저에 자동으로 저장돼요.</p><button class="primary-button modal-done" data-close>설정 완료</button></dialog>
+
+  <dialog id="help-dialog" class="modal" aria-labelledby="help-heading"><div class="modal-heading"><div><p class="eyebrow">GET INTO THE GROOVE</p><h2 id="help-heading">비트에 들어가는 방법</h2></div><button class="icon-button" data-close aria-label="플레이 방법 닫기"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div><div class="help-keys"><kbd>D</kbd><kbd>F</kbd><kbd>J</kbd><kbd>K</kbd></div><p>왼쪽부터 <strong id="help-key-text">D · F · J · K</strong> 키에 손을 올려두세요. 노트가 아래 판정선에 닿을 때 해당 키를 누르면 돼요. 터치 화면에서는 아래 레인 버튼을 누를 수 있어요.</p><div class="help-judgments"><div><span class="perfect">PERFECT</span><strong>±45 ms</strong></div><div><span class="great">GREAT</span><strong>±90 ms</strong></div><div><span class="good">GOOD</span><strong>±140 ms</strong></div></div><p>일반 판정은 타격음과 화면으로 알려줘요. 첫 10콤보와 이후 50·100·150콤보에서만 효과음와 축하 효과가 나와요. 콤보가 끊겨도 같은 구간의 보상은 곡당 한 번만 나와요. 다시 플레이하면 보상도 초기화돼요. 설정에서 효과음를 들어보고 음량을 조절할 수 있어요.</p><p><kbd>ESC</kbd> 일시정지 · <kbd>ENTER</kbd> 시작 / 재개<br>처음이라면 레벨 1과 노트 속도 ×2.0을 추천해요.</p><button class="primary-button modal-done" data-close>준비됐어요</button></dialog>
+
+  <dialog id="pause-dialog" class="modal pause-modal" aria-labelledby="pause-heading"><p class="eyebrow">TAKE A BREATH</p><h2 id="pause-heading">잠깐, 쉬어가요.</h2><p>다시 준비되면 이어서 플레이하세요.</p><p id="pause-error" class="error-message" role="alert" hidden></p><button id="resume-button" class="primary-button modal-done">계속 플레이 <kbd>ENTER</kbd></button><button id="quit-button" class="secondary-button modal-done">곡 선택으로 돌아가기</button></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

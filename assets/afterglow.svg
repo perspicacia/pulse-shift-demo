@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="0" x2="720" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#193538"/><stop offset=".5" stop-color="#103235"/><stop offset="1" stop-color="#0a141c"/></linearGradient>
+    <linearGradient id="ring" x1="210" y1="150" x2="620" y2="660" gradientUnits="userSpaceOnUse"><stop stop-color="#d5ff56"/><stop offset=".43" stop-color="#98f8a6"/><stop offset=".76" stop-color="#57cfdd"/><stop offset="1" stop-color="#20849c"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#9aeebe" stop-opacity=".3"/><stop offset="1" stop-color="#50a7a1" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" stroke="#c5fff3" stroke-opacity=".055"/></pattern>
+    <filter id="blur"><feGaussianBlur stdDeviation="24"/></filter>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h800v800H0z"/>
+  <path fill="url(#grid)" d="M0 0h800v800H0z"/>
+  <circle cx="400" cy="390" r="380" fill="url(#glow)"/>
+  <circle cx="401" cy="401" r="237" stroke="#a2ffb6" stroke-width="25" opacity=".14" filter="url(#blur)"/>
+  <g transform="rotate(-27 400 400)">
+    <ellipse cx="400" cy="400" rx="254" ry="242" stroke="#060f15" stroke-width="66"/>
+    <ellipse cx="400" cy="390" rx="253" ry="241" stroke="url(#ring)" stroke-width="43"/>
+    <ellipse cx="400" cy="384" rx="249" ry="237" stroke="#d7ffc4" stroke-opacity=".65" stroke-width="2"/>
+    <ellipse cx="400" cy="389" rx="217" ry="206" stroke="#45a7aa" stroke-width="2"/>
+    <ellipse cx="400" cy="391" rx="189" ry="180" stroke="url(#ring)" stroke-width="16"/>
+    <ellipse cx="400" cy="391" rx="162" ry="154" stroke="#9fe5b7" stroke-opacity=".6" stroke-width="2"/>
+    <ellipse cx="400" cy="391" rx="132" ry="125" stroke="url(#ring)" stroke-width="7"/>
+    <ellipse cx="400" cy="391" rx="112" ry="106" stroke="#97ffb4" stroke-opacity=".27" stroke-width="1"/>
+  </g>
+  <path d="M60 414h170l31-79 50 142 51-229 65 294 51-146 24 48h215" stroke="#051b21" stroke-width="33" stroke-linejoin="round"/>
+  <path d="M60 405h170l31-79 50 142 51-229 65 294 51-146 24 48h215" stroke="#bfff65" stroke-width="7" stroke-linejoin="round"/>
+  <g stroke="#c6ffee" stroke-opacity=".5"><path d="M41 88V41h47M712 41h47v47M41 712v47h47M712 759h47v-47"/><path d="M400 26v18M26 400h18M756 400h18M400 756v18"/></g>
+  <g fill="#ccf5e9" font-family="Arial, sans-serif" font-size="14" letter-spacing="4"><text x="57" y="89">PL / 001</text><text x="583" y="89">148 BPM</text><text x="57" y="713">PULSE LAB</text><text x="542" y="713">ORIGINAL MIX</text></g>
+  <path d="M55 739h22v5H55zm27 0h5v5h-5zm10 0h37v5H92zm43 0h12v5h-12zm17 0h4v5h-4zm9 0h27v5h-27zm33 0h8v5h-8z" fill="#b6eadd" opacity=".5"/>
+</svg>

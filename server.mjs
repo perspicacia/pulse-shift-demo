@@ -1,0 +1,25 @@
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { extname, resolve, sep } from 'node:path';
+
+const root = resolve(fileURLToPath(new URL('.', import.meta.url)));
+const port = Number(process.env.PORT || 4173);
+const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json; charset=utf-8', '.wav': 'audio/wav' };
+
+createServer(async (req, res) => {
+  try {
+    const path = resolve(root, '.' + decodeURIComponent(new URL(req.url, 'http://localhost').pathname));
+    const relative = path.slice(root.length + 1);
+    if ((path !== root && !path.startsWith(root + sep)) || relative.split(sep).some(part => part.startsWith('.')) || relative === 'server.mjs') {
+      res.writeHead(403).end('Forbidden');
+      return;
+    }
+    const file = path === resolve(root) ? resolve(root, 'index.html') : path;
+    const body = await readFile(file);
+    res.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+    res.end(body);
+  } catch {
+    res.writeHead(404).end('Not found');
+  }
+}).listen(port, '127.0.0.1', () => console.log(`PULSE SHIFT → http://localhost:${port}`));

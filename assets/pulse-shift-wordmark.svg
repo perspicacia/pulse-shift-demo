@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 730 112" fill="none">
+  <title>PULSE SHIFT</title>
+  <desc>Original silver wordmark with blade serifs, angular terminals and diagonal cuts.</desc>
+  <defs>
+    <linearGradient id="silver" x1="0" y1="14" x2="0" y2="98" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/>
+      <stop offset=".48" stop-color="#e6edf5"/>
+      <stop offset="1" stop-color="#a9b9ce"/>
+    </linearGradient>
+    <path id="s" d="M62 10 59 39 54 24C45 15 24 14 17 24 8 39 26 43 41 48 60 55 67 66 58 82 51 96 27 102 10 90L2 99 5 67 11 82C23 95 46 94 50 82 55 69 41 65 23 59 4 52-3 39 6 25 16 10 39 9 52 17Z"/>
+    <mask id="cuts" maskUnits="userSpaceOnUse" x="0" y="0" width="730" height="112">
+      <path fill="#fff" d="M0 0h730v112H0z"/>
+      <path fill="#000" d="m4 74 71-45v4L4 78Zm221-4 72-37v4l-72 37Zm243-3 76-40v4l-76 40Z"/>
+    </mask>
+  </defs>
+  <g fill="url(#silver)" mask="url(#cuts)">
+    <!-- P -->
+    <path fill-rule="evenodd" d="M5 14h37c24 0 36 7 36 21S65 58 39 58H29v29l14 9H2l13-10V24ZM29 19v34h10c16 0 24-7 24-18S55 19 40 19Z"/>
+    <!-- U -->
+    <path d="M80 14h40l-14 9v49c0 15 7 22 20 22 14 0 22-9 22-23V23l-14-9h32l-12 9v48c0 19-12 28-32 28-22 0-31-10-31-28V24Z"/>
+    <!-- L -->
+    <path d="M167 14h40l-14 9v67h22l23-23-7 29h-66l14-10V24Z"/>
+    <!-- S -->
+    <use href="#s" x="244"/>
+    <!-- E -->
+    <path d="M312 14h63l4 22-17-17h-24v32h16l14-12-4 30-10-13h-16v34h24l23-22-7 28h-68l14-10V24Z"/>
+    <!-- S -->
+    <use href="#s" x="405"/>
+    <!-- H -->
+    <path d="M473 14h39l-13 9v28h34V24l-12-10h39l-13 10v62l12 10h-40l14-10V57h-34v30l13 9h-40l13-10V24Z"/>
+    <!-- I -->
+    <path d="M564 14h39l-13 10v62l13 10h-40l13-10V24Z"/>
+    <!-- F -->
+    <path d="M607 14h61l4 23-18-18h-20v33h14l14-12-4 30-10-13h-14v30l15 9h-42l13-10V24Z"/>
+    <!-- T -->
+    <path d="m676 14-6 25 17-20h12v67l-15 10h43l-14-10V19h10l7 9V14Z"/>
+  </g>
+  <path d="m405 106 311-3-12 4H405Z" fill="#a5e8ef" opacity=".7"/>
+</svg>

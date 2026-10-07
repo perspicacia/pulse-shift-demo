@@ -1,0 +1,23 @@
+node_modules/
+.DS_Store
+artifacts/
+# Personal audio stays outside version control.
+*.mp3
+*.wav
+*.m4a
+*.aac
+*.flac
+*.ogg
+*.aiff
+*.aif
+# Authored lobby composition.
+!assets/music/neon-halo.wav
+
+# Local presentation deliverables and private recovery material.
+*.mp4
+*.pdf
+*.pptx
+*.docx
+private-backups/
+presentation-video/
+presentation-assets/

@@ -1,0 +1,671 @@
+import { AudioEngine } from './audio.js';
+import { Session, DIFFICULTIES } from './game.js';
+import { BUILTIN_TRACKS } from './tracks.js';
+import { HitEffects } from './effects.js';
+import { highwayGeometry, drawHighway } from './highway.js';
+import { LobbyMusic } from './lobby-music.js';
+import { keysFor, chartFor, modeRecordKey } from './modes.js';
+
+const $ = id => document.getElementById(id);
+const audio = new AudioEngine();
+const effects = new HitEffects();
+const popAnimations = new Map();
+let activeTrack = BUILTIN_TRACKS[0];
+const colors = { perfect: '#d5ff56', great: '#83e8f0', good: '#ffc984', miss: '#ff888f' };
+const laneColors = ['#d5ff56', '#83e8f0', '#83e8f0', '#d5ff56'];
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
+const write = (key, data) => { try { localStorage.setItem(key, JSON.stringify(data)); return true; } catch { return false; } };
+const saved = read('pulse-shift-settings', {});
+const clamp = (value, min, max, fallback) => Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
+const settings = {
+  keyCount: saved.keyCount === 6 ? 6 : 4,
+  volume: clamp(saved.volume, 0, 1, 0.65),
+  effectsVolume: clamp(saved.effectsVolume, 0, 1, 0.7),
+  comboVolume: clamp(saved.comboVolume ?? saved.voiceVolume, 0, 1, 0.8),
+  lobbyVolume: clamp(saved.lobbyVolume, 0, 1, 0.3),
+  lobbyEnabled: saved.lobbyEnabled !== false,
+  effectIntensity: clamp(saved.effectIntensity, 0, 1, 1),
+  speed: clamp(saved.speed, 1, 6, 3),
+  offset: clamp(saved.offset, -200, 200, 0),
+  difficulty: Object.hasOwn(DIFFICULTIES, saved.difficulty) ? saved.difficulty : 'normal',
+};
+let records = read('pulse-shift-records', {});
+if (!records || typeof records !== 'object') records = {};
+let state = 'menu', session = null, previewing = false, previewTimer = 0, actionToken = 0;
+let previewLoading = false;
+let held = new Set(), laneFlashes = [0, 0, 0, 0], lastFeedback = 0;
+let celebrationUntil = 0;
+let feedbackType = '', uiTime = 0, canvasWidth = 0, canvasHeight = 0, lastNoteIndex = 0;
+let toastTimer = 0;
+const canvas = $('game-canvas'), ctx = canvas.getContext('2d');
+let laneButtons = [...document.querySelectorAll('[data-lane]')];
+const inputKeys = () => keysFor(settings.keyCount);
+const activeChart = () => chartFor(activeTrack, settings.keyCount, settings.difficulty);
+const lobby = new LobbyMusic(audio, {
+  enabled: settings.lobbyEnabled,
+  canPlay: () => state === 'menu' && !previewing && !previewLoading && !document.hidden && !$('settings-dialog').open && settings.lobbyVolume > 0,
+  onState: status => {
+    const enabled = lobby.unlocked && lobby.enabled;
+    $('lobby-music').dataset.state = status;
+    $('lobby-toggle').setAttribute('aria-pressed', String(enabled));
+    $('lobby-toggle').setAttribute('aria-label', enabled ? '대기 음악 끄기' : '대기 음악 켜기');
+    $('lobby-toggle-label').textContent = enabled ? '끄기' : '켜기';
+    $('lobby-toggle').querySelector('use').setAttribute('href', enabled ? '#i-pause' : '#i-play');
+    $('lobby-status').textContent = { idle: '첫 클릭이나 키 입력으로 시작', off: '대기 음악 꺼짐', loading: '음악 준비 중…', playing: '대기 음악 재생 중', paused: settings.lobbyVolume <= 0 ? '설정에서 대기 음악 음량을 올려주세요' : '잠시 대기 중', error: '다시 켜기를 눌러주세요' }[status];
+    if (status === 'error') {
+      $('lobby-toggle').setAttribute('aria-label', '대기 음악 다시 켜기');
+      $('lobby-toggle-label').textContent = '다시 켜기';
+    }
+  },
+  onError: error => toast(error.message),
+});
+
+function formatTime(time) {
+  const value = Math.max(0, Math.round(time));
+  return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+}
+
+function toast(message) {
+  clearTimeout(toastTimer);
+  $('toast').textContent = message;
+  $('toast').hidden = false;
+  toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4000);
+}
+
+function screen(name) {
+  for (const item of ['menu', 'game', 'result']) $(`${item}-screen`).hidden = item !== name;
+  $('settings-button').disabled = name === 'game';
+  $('help-button').disabled = name === 'game';
+  document.body.dataset.screen = name;
+  lobby.sync();
+  window.scrollTo(0, 0);
+}
+
+function updateBest() {
+  const record = currentRecord();
+  $('best-score').textContent = Number.isFinite(record?.score) ? record.score.toLocaleString('en-US') : '—';
+  $('best-grade').textContent = record?.grade ? `${record.grade} RANK · ${Number(record.accuracy).toFixed(2)}%` : 'NO RECORD';
+}
+
+function recordKey() { return modeRecordKey(activeTrack.id, settings.difficulty, settings.keyCount); }
+function currentRecord() {
+  return records[recordKey()] || (settings.keyCount === 4 ? records[`${activeTrack.id}:${settings.difficulty}`] || (activeTrack.id === 'afterglow' ? records[settings.difficulty] : null) : null);
+}
+
+function updateTrack() {
+  if (activeTrack.id !== 'afterglow') settings.keyCount = 4;
+  const track = activeTrack;
+  $('track-title').textContent = track.title;
+  $('track-title').title = track.title;
+  $('track-artist').textContent = 'PULSE LAB — ORIGINAL MIX';
+  $('track-source').textContent = 'ORIGINAL';
+  $('track-genre').textContent = track.genre;
+  $('track-description').textContent = track.description;
+  $('cover-badge').textContent = 'PULSE ORIGINAL';
+  $('deck-title').textContent = track.title;
+  document.querySelector('.art-column').classList.toggle('tidal-art', track.id === 'tidal-circuit');
+  for (const image of document.querySelectorAll('[data-cover]')) { image.src = track.cover; image.alt = `${track.title} 앨범 아트`; }
+  $('stage-cover').src = track.cover;
+  $('preview-button').setAttribute('aria-label', `${track.title} 음악 미리듣기`);
+  $('bpm-heading').textContent = 'BPM';
+  $('bpm-label').textContent = track.bpm;
+  $('duration-label').textContent = formatTime(track.duration);
+  $('game-title').textContent = track.title;
+  $('play-title').textContent = track.title;
+  $('play-artist').textContent = track.artist;
+  $('play-source').textContent = `PULSE ORIGINAL / ${track.number}`;
+  $('play-bpm').textContent = `${track.bpm} BPM`;
+  $('result-title').textContent = track.title;
+  $('result-song-meta').textContent = `${track.artist} / ${track.bpm} BPM`;
+  $('collection-name').textContent = 'DISC COLLECTION';
+  const count = String(BUILTIN_TRACKS.length).padStart(2, '0');
+  $('collection-count').textContent = `/ ${count}`;
+  $('tracklist-count').textContent = count;
+  for (const { buttonId: id, id: trackId } of BUILTIN_TRACKS) {
+    const selected = trackId === track.id;
+    $(id).setAttribute('aria-pressed', String(selected));
+    $(id).querySelector('.selection-label').textContent = selected ? 'SELECTED' : '선택하기';
+  }
+  updateDiscSelector();
+  updateSettings(false);
+}
+
+function updateDiscSelector() {
+  const tracks = BUILTIN_TRACKS, current = tracks.findIndex(track => track.id === activeTrack.id);
+  tracks.forEach((track, index) => {
+    const slot = index - current;
+    const card = $(track.buttonId);
+    card.dataset.position = String(slot);
+    card.style.setProperty('--slot', slot);
+    card.style.setProperty('--tilt', `${Math.sign(slot) * 12}deg`);
+    card.setAttribute('aria-description', slot === 0 ? '중앙에 놓인 곡입니다. Enter로 플레이를 시작하세요.' : '선택하면 CD 플레이어 중앙으로 이동합니다.');
+  });
+  $('disc-current').textContent = String(current + 1).padStart(2, '0');
+  $('disc-selection-status').textContent = `${activeTrack.title}, ${current + 1}/${tracks.length} 곡 선택됨`;
+}
+
+function stepTrack(direction, focusDisc = false) {
+  if (state !== 'menu') return;
+  const tracks = BUILTIN_TRACKS, index = tracks.findIndex(track => track.id === activeTrack.id);
+  selectTrack(tracks[(index + direction + tracks.length) % tracks.length]);
+  if (focusDisc) $(activeTrack.buttonId).focus({ preventScroll: true });
+}
+
+function selectTrack(track) {
+  if (state !== 'menu' || !track) return;
+  if (track.id === activeTrack.id) return;
+  actionToken++; stopPreview(); audio.stop();
+  activeTrack = track;
+  updateTrack();
+}
+
+async function prepareAudio(track = activeTrack) {
+  await audio.initContext();
+  await audio.prepareFeedback().catch(error => toast(error.message));
+  return await audio.init(track.id);
+}
+
+
+function updateModeUI() {
+  const keys = inputKeys(), six = settings.keyCount === 6;
+  document.body.dataset.keyCount = String(settings.keyCount);
+  for (const button of document.querySelectorAll('button[data-key-count]')) {
+    button.setAttribute('aria-pressed', String(Number(button.dataset.keyCount) === settings.keyCount));
+    button.disabled = Number(button.dataset.keyCount) === 6 && activeTrack.id !== 'afterglow';
+  }
+  for (const button of document.querySelectorAll('[data-difficulty]')) button.disabled = six && button.dataset.difficulty !== 'easy';
+  for (const id of ['play-key-count', 'stage-key-count']) $(id).textContent = `${settings.keyCount} KEY${six ? ' · 실험' : ''}`;
+  const suffix = document.createElement('span'); suffix.className = 'stat-suffix'; suffix.textContent = ' KEY';
+  $('menu-key-count').replaceChildren(String(settings.keyCount), suffix);
+  $('header-key-count').textContent = `${settings.keyCount} KEY RHYTHM${six ? ' · EXPERIMENT' : ' EXPERIENCE'}`;
+  $('settings-key-count').textContent = `${settings.keyCount} KEY LAYOUT`;
+  document.title = `PULSE SHIFT · ${settings.keyCount} KEY RHYTHM${six ? ' · 실험' : ''}`;
+  $('mode-hint').textContent = six ? '6키 실험 · AFTERGLOW LEVEL 1 · S D F / J K L' : '4키 기본 · 6키 실험은 AFTERGLOW LEVEL 1만 지원합니다.';
+  const labels = keys.map(key => key.slice(3));
+  $('game-canvas').setAttribute('aria-label', `${settings.keyCount}개 레인, ${labels.join(' ')} 키로 플레이하세요.`);
+  $('help-key-text').textContent = labels.join(' · ');
+  const controls = document.querySelector('.lane-controls');
+  if (controls.dataset.keyCount === String(settings.keyCount)) return;
+  clearHeld();
+  controls.dataset.keyCount = String(settings.keyCount);
+  controls.style.gridTemplateColumns = `repeat(${keys.length}, minmax(0, 1fr))`;
+  controls.replaceChildren(...labels.map((label, lane) => {
+    const button = document.createElement('button');
+    button.dataset.lane = String(lane); button.textContent = label;
+    button.setAttribute('aria-label', `${lane + 1}번째 레인 ${label}`);
+    return button;
+  }));
+  laneButtons = [...controls.children]; laneFlashes = keys.map(() => 0);
+  bindLaneControls();
+  for (const row of document.querySelectorAll('.key-row, .help-keys')) {
+    const children = [];
+    labels.forEach((label, index) => {
+      if (index === labels.length / 2 && row.classList.contains('key-row')) {
+        const gap = document.createElement('span'); gap.className = 'key-gap'; children.push(gap);
+      }
+      const kbd = document.createElement('kbd'); kbd.textContent = label; children.push(kbd);
+    });
+    row.replaceChildren(...children);
+  }
+}
+
+function updateSettings(persist = true) {
+  if (settings.keyCount === 6) settings.difficulty = 'easy';
+  updateModeUI();
+  $('speed-value').textContent = `× ${settings.speed.toFixed(1)}`;
+  $('offset-value').textContent = `${settings.offset > 0 ? '+' : ''}${settings.offset} ms`;
+  $('speed-input').value = settings.speed;
+  $('offset-input').value = settings.offset;
+  $('volume-input').value = Math.round(settings.volume * 100);
+  $('speed-output').textContent = `×${settings.speed.toFixed(1)}`;
+  $('offset-output').textContent = $('offset-value').textContent;
+  $('volume-output').textContent = `${Math.round(settings.volume * 100)}%`;
+  for (const [id, field] of [['effects-volume', 'effectsVolume'], ['combo-volume', 'comboVolume'], ['lobby-volume', 'lobbyVolume'], ['effect-intensity', 'effectIntensity']]) {
+    $(id + '-input').value = Math.round(settings[field] * 100);
+    $(id + '-output').textContent = `${Math.round(settings[field] * 100)}%`;
+  }
+  audio.setVolume(settings.volume);
+  audio.setEffectsVolume(settings.effectsVolume);
+  audio.setComboVolume(settings.comboVolume);
+  audio.setLobbyVolume(settings.lobbyVolume);
+  lobby.sync();
+  $('note-count').textContent = `${activeChart().length} NOTES`;
+  for (const button of document.querySelectorAll('[data-difficulty]')) button.setAttribute('aria-pressed', button.dataset.difficulty === settings.difficulty);
+  updateBest();
+  if (persist) write('pulse-shift-settings', settings);
+}
+
+function stopPreview() {
+  clearTimeout(previewTimer);
+  if (previewing) audio.stop();
+  previewing = false;
+  previewLoading = false;
+  $('preview-button').setAttribute('aria-pressed', 'false');
+  $('preview-label').textContent = '미리듣기';
+  $('disc-selector').classList.remove('is-previewing');
+  $('deck-state').textContent = 'READY';
+  $('preview-button').querySelector('use').setAttribute('href', '#i-play');
+  lobby.sync();
+}
+
+async function preview() {
+  if (state !== 'menu') return;
+  if (previewing) { stopPreview(); actionToken++; return; }
+  const token = ++actionToken;
+  previewLoading = true;
+  lobby.sync();
+  const button = $('preview-button');
+  button.disabled = true;
+  $('preview-label').textContent = '음악 준비 중…';
+  $('menu-error').hidden = true;
+  try {
+    const buffer = await prepareAudio();
+    if (token !== actionToken || state !== 'menu' || document.hidden) return;
+    const offset = Math.min(activeTrack.duration / 2, activeTrack.previewBeat * 60 / activeTrack.bpm);
+    audio.play({ buffer, offset });
+    previewing = true;
+    button.setAttribute('aria-pressed', 'true');
+    $('preview-label').textContent = '미리듣기 중지';
+    $('disc-selector').classList.add('is-previewing');
+    $('deck-state').textContent = 'PLAYING';
+    button.querySelector('use').setAttribute('href', '#i-pause');
+    previewTimer = setTimeout(stopPreview, Math.min(16, activeTrack.duration - offset) * 1000);
+  } catch (error) {
+    $('menu-error').textContent = error.message;
+    $('menu-error').hidden = false;
+  } finally {
+    button.disabled = false;
+    if (token === actionToken) { previewLoading = false; lobby.sync(); }
+    if (!previewing) $('preview-label').textContent = '미리듣기';
+  }
+}
+
+function clearHeld() {
+  held.clear();
+  laneButtons.forEach(button => button.classList.remove('pressed'));
+}
+
+async function start() {
+  if (!['menu', 'result'].includes(state)) return;
+  state = 'loading';
+  const token = ++actionToken;
+  stopPreview();
+  $('menu-error').hidden = true;
+  $('start-button').disabled = true;
+  $('retry-button').disabled = true;
+  $('start-label').textContent = '음악 준비 중…';
+  try {
+    const buffer = await prepareAudio();
+    if (token !== actionToken) return;
+    session = new Session(settings.difficulty, activeChart());
+    clearEffects(); laneFlashes.fill(0); clearHeld(); lastNoteIndex = 0; lastFeedback = 0;
+    $('judgment-label').textContent = '';
+    $('combo-label').textContent = '';
+    $('combo-caption').textContent = '';
+    $('timing-label').textContent = '';
+    $('play-elapsed').textContent = '00:00';
+    $('play-progress').style.width = '0%';
+    const difficulty = DIFFICULTIES[settings.difficulty];
+    $('game-difficulty').textContent = difficulty.label;
+    $('stage-speed').textContent = `SPEED ×${settings.speed.toFixed(1)}`;
+    $('play-duration').textContent = formatTime(activeTrack.duration);
+    audio.play({ buffer, countdown: 3 });
+    state = 'playing';
+    screen('game');
+    resizeCanvas();
+    updateLive();
+    $('pause-button').focus({ preventScroll: true });
+    if (document.hidden) pause();
+  } catch (error) {
+    state = 'menu';
+    screen('menu');
+    $('menu-error').textContent = error.message;
+    $('menu-error').hidden = false;
+  } finally {
+    $('start-button').disabled = false;
+    $('retry-button').disabled = false;
+    $('start-label').textContent = '플레이 시작';
+  }
+}
+
+async function pause() {
+  if (state !== 'playing') return;
+  state = 'pausing';
+  clearHeld();
+  try {
+    await audio.pause();
+    state = 'paused';
+    $('pause-error').hidden = true;
+    $('pause-dialog').showModal();
+    $('resume-button').focus();
+  } catch {
+    state = 'playing';
+    toast('일시정지하지 못했어요. 다시 시도해주세요.');
+  }
+}
+
+async function resume() {
+  if (state !== 'paused') return;
+  state = 'resuming';
+  $('resume-button').disabled = true;
+  try {
+    await audio.resume();
+    state = 'playing';
+    $('pause-dialog').close();
+    $('pause-button').focus({ preventScroll: true });
+  } catch {
+    state = 'paused';
+    $('pause-error').textContent = '음악을 재개하지 못했어요. 다시 눌러주세요.';
+    $('pause-error').hidden = false;
+  } finally { $('resume-button').disabled = false; }
+}
+
+function menu() {
+  actionToken++;
+  audio.stop();
+  state = 'menu';
+  clearHeld();
+  clearEffects();
+  if ($('pause-dialog').open) $('pause-dialog').close();
+  screen('menu');
+  updateBest();
+  $('start-button').focus({ preventScroll: true });
+}
+
+function finish() {
+  if (state !== 'playing') return;
+  session.expire(activeTrack.duration + 1);
+  state = 'result';
+  audio.stop();
+  clearHeld();
+  clearEffects();
+  const previous = currentRecord();
+  const newBest = !previous || session.score > previous.score;
+  if (newBest) {
+    records[recordKey()] = { score: session.score, accuracy: session.accuracy, grade: session.grade, maxCombo: session.maxCombo };
+    if (!write('pulse-shift-records', records)) toast('기록 저장이 차단되어 이번 결과만 표시돼요.');
+  }
+  $('result-difficulty').textContent = `${DIFFICULTIES[settings.difficulty].label} · ${settings.keyCount} KEY${settings.keyCount === 6 ? ' · 실험' : ''}`;
+  $('result-grade').textContent = session.grade;
+  $('result-score').textContent = session.score.toLocaleString('en-US');
+  $('result-accuracy').textContent = `${session.accuracy.toFixed(2)}%`;
+  $('result-combo').textContent = session.maxCombo;
+  for (const [type, count] of Object.entries(session.counts)) $(`result-${type}`).textContent = count;
+  $('new-record').hidden = !newBest || session.score === 0;
+  $('clear-status').textContent = session.counts.miss === 0 ? 'FULL COMBO' : 'TRACK FINISHED';
+  $('result-message').textContent = { S: '완벽에 가까운 비트.', A: '리듬을 제대로 탔어요.', B: '좋은 리듬이었어요.', C: '조금씩 비트가 맞아가요.', D: '다음 비트는 더 가까이.' }[session.grade];
+  screen('result');
+  $('retry-button').focus({ preventScroll: true });
+}
+
+function updateLive() {
+  if (!session) return;
+  $('live-score').textContent = String(session.score).padStart(7, '0');
+  $('live-accuracy').innerHTML = `${session.accuracy.toFixed(2)}<small>%</small>`;
+  $('live-max-combo').textContent = session.maxCombo;
+  for (const [type, count] of Object.entries(session.counts)) $(`count-${type}`).textContent = count;
+  const target = session.nextComboMilestone;
+  const charge = target ? Math.min(session.combo / target, 1) : 1;
+  $('combo-charge-value').textContent = target ? `${session.combo} / ${target}` : '보상 완료';
+  $('combo-charge').setAttribute('aria-valuenow', Math.round(charge * 100));
+  $('combo-charge').setAttribute('aria-valuetext', target ? `현재 ${session.combo}콤보, 다음 보상 ${target}콤보` : '이번 곡의 콤보 보상 완료');
+  [...$('combo-charge').children].forEach((segment, i) => segment.classList.toggle('charged', i < Math.floor(charge * 10)));
+}
+
+function pop(id, scale, duration) {
+  popAnimations.get(id)?.cancel();
+  if (reducedMotion.matches || settings.effectIntensity <= 0) return;
+  popAnimations.set(id, $(id).animate([
+    { transform: `scale(${scale})` }, { transform: 'scale(1)' },
+  ], { duration, easing: 'cubic-bezier(.16,1,.3,1)' }));
+}
+
+function clearEffects() {
+  effects.clear();
+  popAnimations.forEach(animation => animation.cancel());
+  popAnimations.clear();
+  celebrationUntil = 0;
+  $('celebration-banner').hidden = true;
+  document.querySelector('.stage').classList.remove('celebrating');
+}
+
+function celebrate(event, now) {
+  $('celebration-title').textContent = `${event.comboMilestone} COMBO!`;
+  $('celebration-caption').textContent = 'FEEL THE FLOW';
+  $('celebration-banner').hidden = false;
+  celebrationUntil = now + 1250;
+  effects.celebrate(now, settings.effectIntensity, reducedMotion.matches);
+  document.querySelector('.stage').classList.toggle('celebrating', settings.effectIntensity > 0 && !reducedMotion.matches);
+  pop('celebration-banner', 0.75, 380);
+  audio.celebrate(event.comboMilestone);
+}
+
+function feedback(event, now = performance.now()) {
+  if (!event) return;
+  feedbackType = event.type;
+  lastFeedback = now;
+  $('judgment-label').textContent = event.type.toUpperCase();
+  $('judgment-label').style.color = colors[event.type];
+  $('judgment-label').style.opacity = 1;
+  pop('judgment-label', event.type === 'perfect' ? 1.2 : 1.08, 180);
+  $('combo-label').textContent = session.combo > 0 ? session.combo : '';
+  $('combo-caption').textContent = session.combo > 0 ? 'COMBO' : '';
+  if (session.combo > 0) pop('combo-label', 1.12, 140);
+  $('timing-label').textContent = event.delta === null ? '' : Math.abs(event.delta) < 10 ? 'ON THE BEAT' : `${event.delta < 0 ? 'EARLY' : 'LATE'} ${Math.abs(Math.round(event.delta))} ms`;
+  if (event.delta !== null) {
+    $('timing-marker').style.left = `${clamp(50 + event.delta / 2.8, 0, 100, 50)}%`;
+    laneFlashes[event.lane] = now;
+    effects.hit(event.lane, event.type, now, settings.effectIntensity, reducedMotion.matches, settings.keyCount);
+    audio.hit(event.lane, event.type);
+  }
+  if (event.comboMilestone) celebrate(event, now);
+  updateLive();
+}
+
+function press(lane, token, timestamp = performance.now()) {
+  if (state !== 'playing' || held.has(token)) return;
+  held.add(token);
+  laneButtons[lane].classList.add('pressed');
+  // Positive calibration delays both the visible hit line crossing and judgment.
+  const time = audio.time(timestamp) - settings.offset / 1000;
+  if (time < 0) return;
+  const event = session.hit(lane, time);
+  // hit() can also expire earlier notes between animation frames.
+  updateLive();
+  if (event) feedback(event);
+}
+
+function release(lane, token) {
+  held.delete(token);
+  const stillHeld = [...held].some(value => value === inputKeys()[lane] || value.startsWith(`pointer-${lane}-`));
+  if (!stillHeld) laneButtons[lane].classList.remove('pressed');
+}
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const ratio = Math.min(devicePixelRatio || 1, 2);
+  canvasWidth = rect.width; canvasHeight = rect.height;
+  canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  document.querySelector('.lane-controls').style.width = `${highwayGeometry(rect.width, rect.height).bottomWidth}px`;
+}
+new ResizeObserver(resizeCanvas).observe(canvas);
+
+function draw(time, now) {
+  if (!canvasWidth || !canvasHeight) return;
+  while (lastNoteIndex < session.notes.length && session.notes[lastNoteIndex].time < time - 0.2) lastNoteIndex++;
+  drawHighway(ctx, {
+    width: canvasWidth, height: canvasHeight, time, now,
+    speed: settings.speed, bpm: activeTrack.bpm, beatOffset: activeTrack.beatOffset,
+    notes: session.notes, firstNote: lastNoteIndex, laneCount: settings.keyCount,
+    noteColors: settings.keyCount === 6 ? ['#d5ff56', '#83e8f0', '#d5ff56', '#83e8f0', '#d5ff56', '#83e8f0'] : laneColors,
+    heldLanes: laneButtons.map(button => button.classList.contains('pressed')),
+    flashes: laneFlashes, effects, intensity: settings.effectIntensity, reduced: reducedMotion.matches,
+  });
+}
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!['playing', 'paused', 'pausing', 'resuming'].includes(state) || !session) return;
+  const songTime = audio.time();
+  const time = songTime - settings.offset / 1000;
+  if (state === 'playing') {
+    const misses = session.expire(time);
+    if (misses.length) feedback(misses.at(-1), now);
+    if (songTime >= activeTrack.duration + Math.max(0, settings.offset / 1000)) { finish(); return; }
+  }
+  draw(time, now);
+  if (celebrationUntil && now > celebrationUntil) {
+    celebrationUntil = 0;
+    $('celebration-banner').hidden = true;
+    document.querySelector('.stage').classList.remove('celebrating');
+  }
+  if (songTime < 0) {
+    const number = Math.max(1, Math.ceil(-songTime));
+    const markup = `<span>GET READY</span>${number > 3 ? 3 : number}`;
+    if ($('countdown').innerHTML !== markup) $('countdown').innerHTML = markup;
+  } else if (songTime < 0.55) { $('countdown').textContent = 'GO'; }
+  else if ($('countdown').textContent) { $('countdown').textContent = ''; }
+  if (feedbackType && now - lastFeedback > 650) $('judgment-label').style.opacity = Math.max(0, 1 - (now - lastFeedback - 650) / 250);
+  if (now - uiTime > 80) {
+    uiTime = now;
+    $('play-elapsed').textContent = formatTime(Math.min(songTime, activeTrack.duration));
+    $('play-progress').style.width = `${clamp(songTime / activeTrack.duration * 100, 0, 100, 0)}%`;
+  }
+}
+
+for (const button of document.querySelectorAll('button[data-key-count]')) button.addEventListener('click', () => {
+  if (state !== 'menu' || button.disabled) return;
+  settings.keyCount = Number(button.dataset.keyCount);
+  updateSettings();
+});
+$('start-button').addEventListener('click', start);
+$('retry-button').addEventListener('click', start);
+$('return-button').addEventListener('click', menu);
+$('preview-button').addEventListener('click', preview);
+$('pause-button').addEventListener('click', pause);
+$('resume-button').addEventListener('click', resume);
+$('quit-button').addEventListener('click', menu);
+$('pause-dialog').addEventListener('cancel', event => { event.preventDefault(); resume(); });
+$('track-previous').addEventListener('click', () => stepTrack(-1));
+$('track-next').addEventListener('click', () => stepTrack(1));
+for (const track of BUILTIN_TRACKS) $(track.buttonId).addEventListener('click', () => selectTrack(track));
+
+for (const button of document.querySelectorAll('[data-difficulty]')) button.addEventListener('click', () => {
+  if (state !== 'menu') return;
+  settings.difficulty = button.dataset.difficulty;
+  updateSettings();
+});
+for (const [id, amount] of [['speed-minus', -0.5], ['speed-plus', 0.5]]) $(id).addEventListener('click', () => {
+  settings.speed = clamp(settings.speed + amount, 1, 6, 3);
+  updateSettings();
+});
+for (const [id, field, multiplier] of [['volume-input', 'volume', 0.01], ['lobby-volume-input', 'lobbyVolume', 0.01], ['effects-volume-input', 'effectsVolume', 0.01], ['combo-volume-input', 'comboVolume', 0.01], ['effect-intensity-input', 'effectIntensity', 0.01], ['speed-input', 'speed', 1], ['offset-input', 'offset', 1]]) $(id).addEventListener('input', event => {
+  settings[field] = Number(event.target.value) * multiplier;
+  updateSettings();
+});
+const comboPreviewButtons = [...document.querySelectorAll('[data-combo-preview]')];
+for (const button of comboPreviewButtons) button.addEventListener('click', async () => {
+  comboPreviewButtons.forEach(button => { button.disabled = true; });
+  stopPreview();
+  try {
+    await audio.prepareFeedback();
+    if (!$('settings-dialog').open || !['menu', 'result'].includes(state)) return;
+    if (settings.comboVolume <= 0) { toast('콤보 효과음 볼륨을 올리면 들을 수 있어요.'); return; }
+    audio.stopFeedback();
+    audio.playCombo(button.dataset.comboPreview, { preview: true });
+  } catch (error) { toast(error.message); }
+  finally { comboPreviewButtons.forEach(button => { button.disabled = false; }); }
+});
+$('hit-preview-button').addEventListener('click', async () => {
+  const button = $('hit-preview-button');
+  button.disabled = true;
+  try {
+    await audio.initContext();
+    if (!$('settings-dialog').open || !['menu', 'result'].includes(state)) return;
+    if (settings.effectsVolume <= 0) { toast('타격음 볼륨을 올리면 들을 수 있어요.'); return; }
+    audio.hit(0, 'perfect');
+  } catch (error) { toast(error.message); }
+  finally { button.disabled = false; }
+});
+$('settings-dialog').addEventListener('close', () => { audio.stopFeedback(); lobby.sync(); });
+reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) clearEffects(); });
+for (const id of ['settings-button', 'sync-button']) $(id).addEventListener('click', () => { $('settings-dialog').showModal(); lobby.sync(); });
+$('help-button').addEventListener('click', () => $('help-dialog').showModal());
+document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
+for (const dialog of [$('settings-dialog'), $('help-dialog')]) dialog.addEventListener('click', event => {
+  if (event.target === dialog) {
+    const rect = dialog.getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
+  }
+});
+
+window.addEventListener('keydown', event => {
+  if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+  if ($('settings-dialog').open || $('help-dialog').open) return;
+  // Keep native slider/text editing keys; song navigation only operates in the menu.
+  if (state === 'menu' && ['ArrowLeft', 'ArrowRight'].includes(event.code) && !event.target.closest('input, select, textarea, [contenteditable="true"]')) {
+    event.preventDefault();
+    stepTrack(event.code === 'ArrowRight' ? 1 : -1, true);
+    return;
+  }
+  if (state === 'menu' && event.code === 'Enter' && event.target.closest('[data-disc-card][data-position="0"]')) {
+    event.preventDefault(); start(); return;
+  }
+  const lane = inputKeys().indexOf(event.code);
+  if (lane >= 0 && state === 'playing') {
+    event.preventDefault();
+    const timestamp = Math.abs(event.timeStamp - performance.now()) < 1000 ? event.timeStamp : performance.now();
+    press(lane, event.code, timestamp);
+  } else if (event.code === 'Escape' && state === 'playing') {
+    event.preventDefault(); pause();
+  } else if (event.code === 'Enter' && state === 'paused') {
+    event.preventDefault(); resume();
+  } else if (event.code === 'Enter' && !event.target.closest('button, input, select, textarea, a')) {
+    if (state === 'menu' || state === 'result') { event.preventDefault(); start(); }
+  }
+});
+window.addEventListener('keyup', event => {
+  const lane = inputKeys().indexOf(event.code);
+  if (lane >= 0) release(lane, event.code);
+});
+function bindLaneControls() {
+for (const button of laneButtons) {
+  const lane = Number(button.dataset.lane);
+  button.addEventListener('pointerdown', event => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
+    press(lane, `pointer-${lane}-${event.pointerId}`, event.timeStamp);
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, event => release(lane, `pointer-${lane}-${event.pointerId}`));
+  // Assistive technology can activate the lane buttons without a pointer.
+  button.addEventListener('click', event => {
+    if (event.detail !== 0) return;
+    const token = `accessible-${lane}`;
+    press(lane, token); release(lane, token);
+  });
+}
+}
+window.addEventListener('blur', () => { clearHeld(); if (state === 'playing') pause(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (state === 'menu') actionToken++; stopPreview(); clearHeld(); if (state === 'playing') pause(); }
+  lobby.sync();
+});
+$('lobby-toggle').addEventListener('click', () => {
+  settings.lobbyEnabled = lobby.toggle();
+  write('pulse-shift-settings', settings);
+});
+// Autoplay is unlocked by a real interaction, never by a synthetic click or timer.
+window.addEventListener('click', event => {
+  if (event.isTrusted && state === 'menu' && !event.target.closest('#lobby-toggle')) lobby.unlock();
+});
+window.addEventListener('keydown', event => {
+  if (event.isTrusted && state === 'menu' && !event.target.closest('#lobby-toggle') && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey && !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) lobby.unlock();
+});
+if (new URLSearchParams(location.search).get('help') === '1') $('help-dialog').showModal();
+updateTrack();
+screen('menu');
+requestAnimationFrame(frame);

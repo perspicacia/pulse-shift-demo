@@ -1,0 +1,254 @@
+/* The CD selector stays separate from the timing-critical game stage. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.menu-screen > .section-heading { margin-bottom: 12px; }
+.disc-selector { --disc-size: 218px; --fan-gap: 324px; margin-bottom: 30px; }
+.deck-scene { position: relative; height: 444px; isolation: isolate; }
+.deck-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, #c3ff4820, transparent 56%);
+  pointer-events: none;
+}
+.scene-grid {
+  position: absolute;
+  bottom: 12px;
+  left: 5%;
+  right: 5%;
+  height: 90px;
+  border-bottom: 1px solid #74856b33;
+  background: repeating-linear-gradient(90deg, transparent 0 79px, #75866616 79px 80px);
+  mask-image: linear-gradient(transparent, #000);
+  transform: perspective(240px) rotateX(48deg);
+  pointer-events: none;
+}
+.cd-player {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 356px;
+  height: 412px;
+  transform: translateX(-50%);
+  z-index: 2;
+  border: 1px solid #f1f3e7;
+  border-radius: 22px;
+  color: #30372f;
+  background: linear-gradient(135deg, #e7e9df, #bfc5bc 72%, #d6dbd1);
+  box-shadow: inset 0 1px 0 #fff, inset 0 -7px 0 #75807155, 0 30px 50px #0006;
+}
+.deck-topline {
+  position: absolute;
+  top: 19px;
+  left: 23px;
+  right: 23px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+}
+.deck-topline b { margin-left: 7px; font-weight: 400; color: #525d50; }
+.deck-power { display: flex; gap: 6px; align-items: center; font-size: 8px; }
+.deck-power i { width: 5px; height: 5px; border-radius: 50%; background: #759b2e; box-shadow: 0 0 6px #7aa62f88; }
+.disc-well {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  width: 242px;
+  height: 242px;
+  transform: translateX(-50%);
+  border: 1px solid #737e74;
+  border-radius: 50%;
+  background: radial-gradient(circle, #27382b, #18231e 65%, #3f4b40);
+  box-shadow: inset 0 5px 15px #0008, 0 1px 0 #fff9;
+}
+.well-ring { position: absolute; inset: 7px; border-radius: 50%; border: 1px solid #bdcbb740; }
+.deck-readout {
+  position: absolute;
+  top: 296px;
+  left: 24px;
+  right: 24px;
+  min-height: 46px;
+  padding: 7px 11px;
+  border: 1px solid #778474;
+  border-radius: 4px;
+  background: #1d2b20;
+  box-shadow: inset 0 2px 5px #0007, 0 1px 0 #fff9;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  color: var(--lime);
+  gap: 2px 10px;
+  font-family: var(--mono);
+}
+.deck-type { font-size: 6px; letter-spacing: 1.6px; color: #c2d1a8; }
+.deck-readout strong { grid-column: 1; font-size: 10px; font-weight: 500; letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#deck-state { grid-column: 2; grid-row: 1 / 3; align-self: center; font-size: 7px; letter-spacing: .5px; }
+.deck-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 24px;
+  right: 24px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 10px;
+}
+.deck-arrow, .cd-player .preview-button {
+  position: static;
+  height: 44px;
+  min-width: 0;
+  border: 1px solid #8b9587;
+  border-radius: 7px;
+  color: #2d3b28;
+  background: linear-gradient(#e1e6d9, #b7c1b0);
+  box-shadow: inset 0 1px #fff9, 0 3px 0 #798672;
+  backdrop-filter: none;
+}
+.deck-arrow { display: grid; place-items: center; }
+.deck-arrow svg { width: 18px; height: 18px; }
+#track-previous svg { transform: rotate(180deg); }
+.deck-arrow:hover, .cd-player .preview-button:hover { background: #eaf1dd; border-color: #607049; }
+.deck-arrow:focus-visible, .cd-player .preview-button:focus-visible { outline-color: #304d1e; outline-offset: 3px; }
+.cd-player .preview-button { padding: 0 12px; gap: 7px; justify-content: center; font-size: 11px; }
+.cd-player .preview-button .mini-eq { margin-left: 3px; gap: 2px; }
+.cd-player .preview-button .mini-eq i { width: 2px; }
+.cd-player .preview-button[aria-pressed=true] { color: #203817; background: #d5e7b5; border-color: #5b7940; }
+.deck-screw { position: absolute; bottom: 6px; width: 4px; height: 4px; border: 1px solid #5a6855; border-radius: 50%; }
+.screw-left { left: 12px; }
+.screw-right { right: 12px; }
+
+.disc-rack { position: absolute; inset: 0; pointer-events: none; }
+.disc-card {
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  width: var(--disc-size);
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  text-align: left;
+  pointer-events: auto;
+  transform: translate(calc(-50% + var(--slot) * var(--fan-gap)), 20px) scale(.94);
+  transition: transform 420ms cubic-bezier(.22,.8,.25,1), opacity 220ms;
+  z-index: 1;
+}
+.disc-card[data-position="0"] { transform: translateX(-50%); z-index: 3; border-radius: 50%; }
+.disc-card-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid #87937d88;
+  border-radius: 8px;
+  box-shadow: 0 18px 30px #0005, inset 0 0 0 4px #fff2;
+  transform: rotate(var(--tilt));
+  transition: border-radius 320ms;
+}
+.disc-card-art img { width: 100%; height: 100%; }
+.disc-card[data-position="0"] .disc-card-art { border-radius: 50%; border: 2px solid #d9e8c399; box-shadow: 0 3px 12px #0007; }
+.disc-gloss { position: absolute; inset: 0; border: 6px solid #fff1; border-radius: inherit; background: linear-gradient(135deg, #fff3, transparent 30%, transparent 65%, #fff1); pointer-events: none; }
+.disc-hub { display: none; position: absolute; width: 36px; height: 36px; left: 50%; top: 50%; transform: translate(-50%, -50%); border-radius: 50%; border: 7px solid #c9d0c2bb; background: #253127; box-shadow: 0 0 0 1px #fff7, 0 0 0 14px #fff1; }
+.disc-card[data-position="0"] .disc-hub { display: block; }
+.disc-card-caption { display: grid; gap: 3px; padding: 26px 2px 0; }
+.disc-card-caption .track-index { font-size: 8px; letter-spacing: 1px; }
+.disc-card-caption strong { font-size: 13px; letter-spacing: .4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.disc-card-caption small { font-size: 9px; color: var(--muted); }
+.disc-card[data-position="0"] .disc-card-caption { display: none; }
+.disc-card:not([data-position="0"]):hover .disc-card-art { border-color: var(--lime); }
+.is-previewing .disc-card[data-position="0"] .disc-card-art { animation: disc-spin 12s linear infinite; }
+@keyframes disc-spin { to { transform: rotate(360deg); } }
+
+.disc-navigation { display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--border); padding: 8px 0 17px; }
+.disc-counter { display: flex; gap: 9px; align-items: center; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.disc-counter strong { color: var(--lime); font-size: 19px; font-weight: 500; }
+#disc-navigation-help { display: flex; gap: 7px; align-items: center; font-size: 11px; color: var(--muted); }
+#disc-navigation-help kbd { height: 25px; width: 26px; font-size: 14px; }
+#disc-navigation-help > span { margin: 0 6px; }
+.disc-ready { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 8px; letter-spacing: 1.2px; }
+.selected-track-details { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 70px; padding: 0 0 25px; }
+.selected-track-details .track-tags { margin-bottom: 12px; }
+.selected-track-details h2 { font-size: clamp(32px,3.7vw,48px); text-wrap: balance; }
+.selected-track-details .track-description { margin-top: 16px; }
+.selected-track-details .track-stats { margin: 22px 0 0; max-width: 360px; }
+.selected-track-details .best-record { margin-top: 3px; padding: 14px 0; }
+.selected-track-details .start-button { min-height: 66px; }
+.menu-screen .setup-strip { margin-top: 16px; }
+
+@media (max-width: 1100px) {
+  .disc-selector { --fan-gap: 265px; --disc-size: 206px; }
+  .disc-card { top: 70px; }
+  .selected-track-details { gap: 34px; }
+}
+@media (max-width: 800px) {
+  .disc-selector { --fan-gap: 215px; --disc-size: 182px; }
+  .deck-scene { overflow: clip; }
+  .cd-player { width: 310px; height: 380px; }
+  .disc-well { width: 210px; height: 210px; top: 43px; }
+  .disc-card { top: 65px; }
+  .deck-readout { top: 265px; }
+  .deck-scene { height: 407px; }
+  .disc-card-caption strong { font-size: 11px; }
+  .disc-card-caption small { font-size: 8px; }
+  .selected-track-details { gap: 25px; }
+  .selected-track-details h2 { font-size: 31px; }
+  .disc-ready { display: none; }
+}
+@media (max-width: 600px) {
+  .menu-screen > .section-heading { align-items: flex-end; margin-bottom: 14px; }
+  .menu-screen > .section-heading h1 { font-size: 29px; }
+  .disc-selector { --disc-size: 154px; --fan-gap: 149px; margin: 0 -20px 22px; }
+  .cd-player { width: 246px; height: 326px; border-radius: 16px; top: 6px; }
+  .deck-topline { left: 16px; right: 16px; top: 14px; font-size: 7px; }
+  .deck-power { font-size: 6px; }
+  .disc-well { top: 36px; width: 174px; height: 174px; }
+  .disc-card { top: 52px; transform: translate(calc(-50% + var(--slot) * var(--fan-gap)), 13px) scale(.85); }
+  .disc-hub { width: 27px; height: 27px; border-width: 5px; box-shadow: 0 0 0 1px #fff7, 0 0 0 9px #fff1; }
+  .deck-readout { top: 221px; left: 16px; right: 16px; min-height: 37px; padding: 5px 8px; }
+  .deck-readout strong { font-size: 8px; }
+  .deck-type { font-size: 5px; letter-spacing: 1px; }
+  #deck-state { font-size: 6px; }
+  .deck-controls { left: 16px; right: 16px; bottom: 13px; gap: 7px; }
+  .cd-player .preview-button { padding: 0 5px; gap: 5px; font-size: 10px; }
+  .cd-player .preview-button .mini-eq { display: none; }
+  .deck-scene { height: 349px; }
+  .disc-card-caption { display: none; }
+  .disc-navigation { margin: 0 20px; padding: 5px 0 14px; gap: 8px; }
+  #disc-navigation-help { font-size: 9px; gap: 4px; }
+  #disc-navigation-help > span { margin: 0; }
+  #disc-navigation-help kbd { width: 21px; height: 23px; }
+  .disc-counter { gap: 5px; font-size: 9px; }
+  .disc-counter strong { font-size: 16px; }
+  .selected-track-details { grid-template-columns: 1fr; gap: 24px; padding-bottom: 22px; }
+  .selected-track-details h2 { font-size: 37px; }
+  .selected-track-details .track-description { font-size: 12px; }
+  .selected-track-details .track-stats { margin-top: 18px; }
+  .selected-track-details .difficulty-picker strong small { display: block; font-size: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .disc-card { transition: none; }
+  .is-previewing .disc-card[data-position="0"] .disc-card-art { animation: none; }
+}
+/* Lobby radio stays separate from the selected CD and its playback controls. */
+.lobby-music{display:flex;align-items:center;gap:16px;padding:11px 16px;margin:-8px 0 24px;border:1px solid var(--border);border-radius:8px;background:linear-gradient(105deg,#83e8f00b,transparent 65%)}
+.lobby-signal{display:flex;align-items:center;justify-content:center;gap:3px;width:32px;height:32px;color:var(--muted);flex-shrink:0}
+.lobby-signal i{display:block;width:3px;height:8px;border-radius:2px;background:currentColor;transform-origin:center}
+.lobby-signal i:nth-child(2),.lobby-signal i:nth-child(4){height:18px;animation-delay:180ms!important}.lobby-signal i:nth-child(3){height:27px;animation-delay:350ms!important}
+.lobby-title{display:flex;flex-direction:column;gap:1px;flex-shrink:0}.lobby-title>span{font:9px var(--mono);letter-spacing:1.8px;color:var(--muted)}.lobby-title strong{font-size:13px;letter-spacing:1.4px}
+.lobby-music p{font-size:12px;color:var(--muted);margin-left:10px;line-height:1.6}
+.lobby-music button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;min-width:80px;padding:8px 12px;margin-left:auto;flex-shrink:0;border:1px solid var(--border);border-radius:5px;background:var(--surface);font-size:12px}
+.lobby-music button svg{width:15px;height:15px}.lobby-music button:hover{border-color:var(--cyan);color:var(--cyan)}
+.lobby-music[data-state=playing] .lobby-signal{color:var(--cyan)}.lobby-music[data-state=playing] .lobby-signal i{animation:eq 650ms ease-in-out alternate infinite}
+.lobby-music[data-state=playing] button{border-color:#83e8f060;color:var(--cyan)}
+@media(max-width:600px){.lobby-music{gap:10px;padding:10px 12px;flex-wrap:wrap;margin:0 0 20px}.lobby-music p{order:1;width:100%;margin:0;font-size:11px}.lobby-music button{min-width:70px}.lobby-title strong{font-size:12px}.lobby-title>span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.lobby-music .lobby-signal i{animation:none!important}}
