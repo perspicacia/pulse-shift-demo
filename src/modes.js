@@ -1,5 +1,5 @@
 import { KEYS, createChart } from './game.js';
-import { ASTRAL_BEAT, createAstralScore } from './astral-score.js';
+import { ASTRAL_BEAT, createAstralScore, createAstralChart } from './astral-score.js';
 
 const keyModes = Object.freeze({
   4: Object.freeze([...KEYS]),
@@ -27,6 +27,25 @@ export function createSixKeyChart() {
 
 export function sixKeyDifficulty(trackId) {
   return trackId === 'afterglow' ? 'easy' : trackId === 'astral-veil' ? 'hard' : null;
+}
+
+export function sixKeyDifficulties(trackId) {
+  return trackId === 'afterglow' ? ['easy'] : trackId === 'astral-veil' ? ['normal', 'hard'] : [];
+}
+
+// LEVEL 2 keeps the four-key chart's authored timing, density and two-note cap.
+// Alternate hands across six lanes; two-note accents use one key in each hand.
+export function createAstralSixKeyNormalChart() {
+  const pattern = [0, 3, 1, 4, 2, 5, 1, 4, 0, 3, 2, 5];
+  const notes = [];
+  let previous = -Infinity, group = 0;
+  for (const note of createAstralChart('normal')) {
+    const chord = Math.abs(note.time - previous) < 1e-8;
+    const lane = chord ? (notes.at(-1).lane + 3) % 6 : pattern[group++ % pattern.length];
+    notes.push({ time: note.time, lane });
+    previous = note.time;
+  }
+  return notes;
 }
 
 // Six-key LEVEL 3 follows the actual drum, bass, lead and arpeggio onsets.
@@ -57,11 +76,12 @@ export function createAstralSixKeyChart() {
 
 export function chartFor(track, keyCount, difficulty) {
   if (keyCount === 4) return track.charts[difficulty];
-  const supportedDifficulty = sixKeyDifficulty(track.id);
-  if (keyCount !== 6 || !supportedDifficulty || difficulty !== supportedDifficulty) {
-    throw new RangeError('6키 실험은 AFTERGLOW LEVEL 1과 ASTRAL VEIL LEVEL 3에서 지원합니다.');
+  if (keyCount !== 6 || !sixKeyDifficulties(track.id).includes(difficulty)) {
+    throw new RangeError('6키 실험은 AFTERGLOW LEVEL 1과 ASTRAL VEIL LEVEL 2·3에서 지원합니다.');
   }
-  return track.id === 'astral-veil' ? createAstralSixKeyChart() : createSixKeyChart();
+  return track.id === 'astral-veil'
+    ? difficulty === 'normal' ? createAstralSixKeyNormalChart() : createAstralSixKeyChart()
+    : createSixKeyChart();
 }
 
 export function modeRecordKey(trackId, difficulty, keyCount) {
