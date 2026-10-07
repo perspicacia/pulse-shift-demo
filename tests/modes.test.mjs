@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { Session, DURATION } from '../src/game.js';
 import { BUILTIN_TRACKS } from '../src/tracks.js';
-import { chartFor, createSixKeyChart, createAstralSixKeyChart, keysFor, modeRecordKey, sixKeyDifficulty } from '../src/modes.js';
+import { chartFor, createSixKeyChart, createAstralSixKeyChart, createAstralSixKeyNormalChart, keysFor, modeRecordKey, sixKeyDifficulty, sixKeyDifficulties } from '../src/modes.js';
 import { ASTRAL_DURATION, createAstralScore } from '../src/astral-score.js';
 
 test('4-key mapping and authored charts remain unchanged; experimental keys split across two hands', () => {
@@ -30,6 +31,8 @@ test('six-key chart uses only authored original beats, all six lanes, and one/tw
 test('six-key experiment is limited to the explicitly authored song/level combinations', () => {
   assert.deepEqual(chartFor(BUILTIN_TRACKS[0], 6, 'easy'), createSixKeyChart());
   assert.deepEqual(chartFor(BUILTIN_TRACKS[2], 6, 'hard'), createAstralSixKeyChart());
+  assert.deepEqual(chartFor(BUILTIN_TRACKS[2], 6, 'normal'), createAstralSixKeyNormalChart());
+  assert.deepEqual(sixKeyDifficulties('astral-veil'), ['normal', 'hard']);
   assert.equal(sixKeyDifficulty('afterglow'), 'easy');
   assert.equal(sixKeyDifficulty('astral-veil'), 'hard');
   assert.equal(sixKeyDifficulty('tidal-circuit'), null);
@@ -37,11 +40,11 @@ test('six-key experiment is limited to the explicitly authored song/level combin
   assert.throws(() => chartFor({ id: 'unknown-track', charts: {} }, 6, 'easy'), RangeError);
   assert.throws(() => chartFor(BUILTIN_TRACKS[0], 6, 'normal'), RangeError);
   assert.throws(() => chartFor(BUILTIN_TRACKS[2], 6, 'easy'), RangeError);
-  assert.throws(() => chartFor(BUILTIN_TRACKS[2], 6, 'normal'), RangeError);
 });
 
 test('Astral six-key hard uses authored onsets, all lanes and playable unique three-key chords', () => {
   const chart = createAstralSixKeyChart(), authored = new Set(createAstralScore().map(event => event.time));
+  assert.equal(createHash('sha256').update(JSON.stringify(chart)).digest('hex'), '570bd694fa3636f1a30c0f7a8a231f5df049cb071838963ff4c63d03f50b6168', 'Existing LEVEL 3 chart is preserved');
   assert.deepEqual(chart, createAstralSixKeyChart());
   assert.ok(chart.length > BUILTIN_TRACKS[2].charts.hard.length);
   assert.deepEqual([...new Set(chart.map(note => note.lane))].sort(), [0, 1, 2, 3, 4, 5]);
@@ -56,6 +59,46 @@ test('Astral six-key hard uses authored onsets, all lanes and playable unique th
   }
   assert.ok([...groups.values()].some(chord => chord.length === 3));
   assert.ok([...groups.values()].every(chord => chord.length <= 3));
+});
+
+test('Astral six-key normal retains LEVEL 2 rhythm and density with two-hand accents', () => {
+  const chart = createAstralSixKeyNormalChart(), baseline = BUILTIN_TRACKS[2].charts.normal;
+  assert.deepEqual(chart, createAstralSixKeyNormalChart());
+  assert.deepEqual(chart.map(n => n.time), baseline.map(n => n.time));
+  assert.equal(chart.length, 243);
+  assert.ok(chart.length < createAstralSixKeyChart().length / 2);
+  assert.deepEqual([...new Set(chart.map(n => n.lane))].sort(), [0, 1, 2, 3, 4, 5]);
+  const groups = new Map(), lanes = Array(6).fill(-Infinity);
+  for (const note of chart) {
+    assert.ok(note.time - lanes[note.lane] >= 0.2);
+    lanes[note.lane] = note.time;
+    const chord = groups.get(note.time) || [];
+    assert.ok(!chord.includes(note.lane));
+    chord.push(note.lane); groups.set(note.time, chord);
+  }
+  assert.ok([...groups.values()].some(c => c.length === 2));
+  for (const chord of groups.values()) {
+    assert.ok(chord.length <= 2);
+    if (chord.length === 2) assert.notEqual(chord[0] < 3, chord[1] < 3);
+  }
+});
+
+test('Astral six-key normal uses ordinary judgment, independent records and clean retry', () => {
+  const chart = createAstralSixKeyNormalChart(), session = new Session('normal', chart);
+  for (const note of chart) {
+    assert.equal(session.hit(note.lane, note.time)?.type, 'perfect');
+    const score = session.score;
+    assert.equal(session.hit(note.lane, note.time), null);
+    assert.equal(session.score, score);
+  }
+  session.expire(ASTRAL_DURATION + 1);
+  assert.deepEqual(session.counts, { perfect: 243, great: 0, good: 0, miss: 0 });
+  assert.equal(session.score, 1000000); assert.equal(session.accuracy, 100);
+  assert.equal(session.maxCombo, 243);
+  const retry = new Session('normal', chart);
+  assert.equal(retry.score, 0); assert.equal(retry.processed, 0);
+  const identities = [modeRecordKey('astral-veil', 'normal', 6), modeRecordKey('astral-veil', 'hard', 6), modeRecordKey('astral-veil', 'normal', 4)];
+  assert.equal(new Set(identities).size, 3);
 });
 
 test('Astral six-key hard perfect demo resolves every note with the normal score and judgment', () => {
