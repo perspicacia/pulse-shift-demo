@@ -4,6 +4,8 @@
 
 소스 저장소: [perspicacia/pulse-shift-demo](https://github.com/perspicacia/pulse-shift-demo). 이 주소는 소스 검토용이며 게임은 아래 명령으로 로컬에서 실행합니다. 검증 절차와 한계는 [DEMO.md](DEMO.md), 포함 기능은 [CHANGELOG.md](CHANGELOG.md)에 있습니다.
 
+발표 시연: [ASTRAL VEIL 6키 LEVEL 3 ALL PERFECT MP4 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL3_ALL_PERFECT.mp4) · [릴리스 설명](https://github.com/perspicacia/pulse-shift-demo/releases/tag/demo-astral-6k-2026-10-07). 1080p·60fps·약 81초이며 음악·타격음·콤보 효과음을 포함합니다. 같은 게임 코드를 발표용 Canvas 화면으로 렌더한 **자동 입력 시연**이며 실제 브라우저 화면 녹화나 사람의 플레이 기록은 아닙니다. 757 PERFECT·0 MISS·100만 점·정확도 100%를 확인했습니다. MP4는 릴리스 첨부파일로 제공하고 발표 PDF는 로컬에 유지합니다.
+
 ## 실행
 
 Node.js 22 이상이 필요합니다. 외부 런타임 패키지가 없어 `npm install`은 필요하지 않습니다.

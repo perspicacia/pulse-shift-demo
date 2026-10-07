@@ -47,6 +47,8 @@ npm run verify:demo
 
 영상은 사용자 요청에 따라 GitHub 릴리스 첨부파일로만 배포하며 소스 Git 이력에는 넣지 않는다. 기존 발표 PDF는 로컬에 유지한다.
 
+[MP4 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL3_ALL_PERFECT.mp4) · [릴리스 설명](https://github.com/perspicacia/pulse-shift-demo/releases/tag/demo-astral-6k-2026-10-07). 파일은 H.264 + AAC 스테레오이며 전체 디코딩 오류가 없고 업로드된 SHA-256이 로컬 파일과 일치한다. 인앱 브라우저에서는 6키 LEVEL 3 선택·실제 S/D/F/J/K/L 입력 판정·전체 곡 결과·재시도·일시정지·복귀와 곡별 지원 난이도 전환을 확인했다. 사람의 전 노트 PERFECT 완주나 23개 전체 자동 회귀를 수행했다는 의미는 아니다.
+
 ## 시작 화면 도시 배경
 
 시작 화면의 배경은 내장 ImageGen으로 새로 제작한 정적 JPEG다. 생성 프롬프트는 `assets/neon-city.README.md`, 표시 스타일은 `menu-background.css`에 있다. 실행 중 AI 호출은 없다. 어두운 패널로 곡 정보의 대비를 유지하고 플레이·결과 화면에서는 도시 배경을 숨긴다. 배경 파일이 없어도 메뉴는 사용할 수 있다.
