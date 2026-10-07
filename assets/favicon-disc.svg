@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <title>PULSE SHIFT disc</title>
+  <defs>
+    <linearGradient id="metal" x1="8" y1="7" x2="53" y2="59" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#416f79"/><stop offset=".23" stop-color="#bceae8"/>
+      <stop offset=".46" stop-color="#e1e9da"/><stop offset=".66" stop-color="#96b685"/>
+      <stop offset=".85" stop-color="#388c98"/><stop offset="1" stop-color="#c6f4df"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="13" y1="12" x2="49" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e9ffb2"/><stop offset=".46" stop-color="#d5ff56"/>
+      <stop offset=".55" stop-color="#83e8f0"/><stop offset="1" stop-color="#e3fff1"/>
+    </linearGradient>
+    <radialGradient id="hub">
+      <stop offset=".5" stop-color="#0b1920"/><stop offset=".58" stop-color="#dee8df"/>
+      <stop offset=".82" stop-color="#a6bec0"/><stop offset="1" stop-color="#446d73"/>
+    </radialGradient>
+    <mask id="disc">
+      <circle cx="32" cy="32" r="30" fill="#fff"/>
+      <circle cx="32" cy="32" r="5" fill="#000"/>
+    </mask>
+  </defs>
+  <g mask="url(#disc)">
+    <circle cx="32" cy="32" r="30" fill="url(#metal)"/>
+    <path d="M32 32 5-7 27-7Z" fill="#d5ff56" opacity=".88"/>
+    <path d="M32 32 42-5 60-2Z" fill="#142e3a" opacity=".48"/>
+    <path d="M32 32 71 10 71 27Z" fill="#a9f7f2" opacity=".9"/>
+    <path d="M32 32 57 71 38 71Z" fill="url(#shine)"/>
+    <path d="M32 32-6 57-6 36Z" fill="#2ca9b0" opacity=".85"/>
+    <path d="M32 32-7 11-7 19Z" fill="#f0f9e4" opacity=".8"/>
+    <path d="M32 32 12 70 6 70Z" fill="#deff8a" opacity=".8"/>
+    <circle cx="32" cy="32" r="29.2" stroke="#d6f0d8" stroke-opacity=".65" stroke-width="1.2"/>
+    <circle cx="32" cy="32" r="29.8" stroke="#29575b" stroke-width="1"/>
+    <circle cx="32" cy="32" r="11" fill="url(#hub)" stroke="#17363d" stroke-width="1.5"/>
+    <circle cx="32" cy="32" r="8.7" stroke="#e9f5df" stroke-opacity=".7"/>
+    <circle cx="32" cy="32" r="5.5" stroke="#10252d" stroke-width="1"/>
+  </g>
+</svg>

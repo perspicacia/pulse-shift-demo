@@ -84,6 +84,8 @@ TIDAL CIRCUIT의 LEVEL 1·2·3 채보는 각각 85·168·381개 노트로 구성
 
 LP 메뉴는 별도 임시 Chrome에서 곡 전환·커버 클릭·미리듣기·게임 시작과 320px·375px·844px 배치를 확인했습니다. 조작 버튼은 최소 44px이며, 가로 넘침 없이 동작 줄이기를 적용합니다. 이 검사는 실제 모바일 기기의 터치·청감을 보장하지 않습니다.
 
+파비콘은 `assets/favicon-disc.svg`의 직접 그린 반사광 CD입니다. 게임의 라임·청록·실버를 사용하고 가운데 구멍과 바깥 영역은 투명하게 처리했습니다. 작은 브라우저 탭에서도 선명하도록 SVG로 연결합니다.
+
 ## 타격 효과와 콤보 효과음
 
 콤보 효과음은 **연속 10콤보, 이후 50·100·150…콤보**에서만 나옵니다. PERFECT·GREAT·GOOD 모두 콤보를 이어가고 MISS는 끊습니다. 콤보가 끊겼다가 같은 구간에 다시 도달해도 이미 받은 보상은 반복되지 않습니다. 다시 플레이하면 보상 일정도 초기화됩니다. 일반 판정이나 누적 PERFECT 횟수만으로는 콤보 효과음이 나오지 않습니다.
@@ -118,6 +120,7 @@ track-selector.css   중앙 LP 턴테이블·커버 이동·반응형 곡 선택
 menu-background.css  시작 화면의 도시 배경·오버레이·메뉴 패널
 playfield.css        앨범 배경·무대 HUD·반응형 플레이 화면
 assets/pulse-shift-wordmark.svg 직접 그린 라임색 각진 사이버 워드마크
+assets/favicon-disc.svg 라임·청록·실버 반사광의 CD 파비콘
 assets/neon-city-v1.jpg ImageGen으로 제작한 시작 화면 도시 배경
 assets/neon-city.README.md 배경 제작 정보와 생성 프롬프트
 assets/afterglow.svg  오리지널 벡터 앨범 아트
