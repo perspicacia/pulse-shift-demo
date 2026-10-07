@@ -5,7 +5,7 @@ import { HitEffects } from './effects.js';
 import { highwayGeometry, drawHighway } from './highway.js';
 import { LobbyMusic } from './lobby-music.js';
 import { SelectedPreview } from './selected-preview.js';
-import { keysFor, chartFor, modeRecordKey } from './modes.js';
+import { keysFor, chartFor, modeRecordKey, sixKeyDifficulty } from './modes.js';
 
 const $ = id => document.getElementById(id);
 const audio = new AudioEngine();
@@ -123,7 +123,6 @@ function currentRecord() {
 }
 
 function updateTrack() {
-  if (activeTrack.id !== 'afterglow') settings.keyCount = 4;
   const track = activeTrack;
   $('track-title').textContent = track.title;
   $('track-title').title = track.title;
@@ -209,16 +208,18 @@ function updateModeUI() {
   document.body.dataset.keyCount = String(settings.keyCount);
   for (const button of document.querySelectorAll('button[data-key-count]')) {
     button.setAttribute('aria-pressed', String(Number(button.dataset.keyCount) === settings.keyCount));
-    button.disabled = Number(button.dataset.keyCount) === 6 && activeTrack.id !== 'afterglow';
+    button.disabled = Number(button.dataset.keyCount) === 6 && !sixKeyDifficulty(activeTrack.id);
   }
-  for (const button of document.querySelectorAll('[data-difficulty]')) button.disabled = six && button.dataset.difficulty !== 'easy';
+  for (const button of document.querySelectorAll('[data-difficulty]')) button.disabled = six && button.dataset.difficulty !== sixKeyDifficulty(activeTrack.id);
   for (const id of ['play-key-count', 'stage-key-count']) $(id).textContent = `${settings.keyCount} KEY${six ? ' · 실험' : ''}`;
   const suffix = document.createElement('span'); suffix.className = 'stat-suffix'; suffix.textContent = ' KEY';
   $('menu-key-count').replaceChildren(String(settings.keyCount), suffix);
   $('header-key-count').textContent = `${settings.keyCount} KEY RHYTHM${six ? ' · EXPERIMENT' : ' EXPERIENCE'}`;
   $('settings-key-count').textContent = `${settings.keyCount} KEY LAYOUT`;
   document.title = `PULSE SHIFT · ${settings.keyCount} KEY RHYTHM${six ? ' · 실험' : ''}`;
-  $('mode-hint').textContent = six ? '6키 실험 · AFTERGLOW LEVEL 1 · S D F / J K L' : '4키 기본 · 6키 실험은 AFTERGLOW LEVEL 1만 지원합니다.';
+  $('mode-hint').textContent = six
+    ? `6키 실험 · ${activeTrack.title} ${DIFFICULTIES[settings.difficulty].label} · S D F / J K L`
+    : '6키 실험: AFTERGLOW LEVEL 1 / ASTRAL VEIL LEVEL 3';
   const labels = keys.map(key => key.slice(3));
   $('game-canvas').setAttribute('aria-label', `${settings.keyCount}개 레인, ${labels.join(' ')} 키로 플레이하세요.`);
   $('help-key-text').textContent = labels.join(' · ');
@@ -248,7 +249,11 @@ function updateModeUI() {
 }
 
 function updateSettings(persist = true) {
-  if (settings.keyCount === 6) settings.difficulty = 'easy';
+  if (settings.keyCount === 6) {
+    const difficulty = sixKeyDifficulty(activeTrack.id);
+    if (difficulty) settings.difficulty = difficulty;
+    else settings.keyCount = 4;
+  }
   updateModeUI();
   $('speed-value').textContent = `× ${settings.speed.toFixed(1)}`;
   $('offset-value').textContent = `${settings.offset > 0 ? '+' : ''}${settings.offset} ms`;
