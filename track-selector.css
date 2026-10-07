@@ -91,7 +91,7 @@
 }
 @media (max-width: 600px) {
   .menu-screen > .section-heading { align-items: flex-end; margin-bottom: 14px; }
-  .menu-screen > .section-heading h1 { font-size: 29px; }
+  .menu-screen > .section-heading h1 { font-size: 24px; }
   .disc-selector { --disc-size: 208px; --fan-gap: 190px; --record-offset: -32px; margin: 0 -20px 22px; }
   .deck-scene { height: 378px; }
   .cd-player { width: 318px; height: 300px; border-radius: 7px; top: 6px; }
