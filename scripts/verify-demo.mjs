@@ -29,7 +29,7 @@ async function command(args, filename) {
 }
 
 async function fingerprints() {
-  const paths = ['.gitignore', 'index.html', 'styles.css', 'track-selector.css', 'playfield.css', 'package.json', 'README.md', 'AGENTS.md', 'DEMO.md', 'CHANGELOG.md', 'server.mjs'];
+  const paths = ['.gitignore', 'index.html', 'styles.css', 'track-selector.css', 'menu-background.css', 'playfield.css', 'package.json', 'README.md', 'AGENTS.md', 'DEMO.md', 'CHANGELOG.md', 'server.mjs'];
   for (const folder of ['src', 'scripts', 'tests', 'assets']) {
     const walk = async dir => { for (const entry of await readdir(join(root, dir), { withFileTypes: true })) { const p = `${dir}/${entry.name}`; if (entry.isDirectory()) await walk(p); else paths.push(p); } };
     await walk(folder);
@@ -132,7 +132,7 @@ try {
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   assert.equal(pkg.version, '0.6.0', 'This harness belongs to the preferred v1, not v2.');
   const html = await readFile(join(root, 'index.html'), 'utf8');
-  assert.ok(html.includes('CD 플레이어 곡 선택') && !html.includes('CAN CLUB'), 'Wrong version entry point');
+  assert.ok(html.includes('LP 턴테이블 곡 선택') && !html.includes('CAN CLUB'), 'Wrong version entry point');
   await fingerprints();
   const tests = (await readdir(join(root, 'tests'))).filter(file => file.endsWith('.test.mjs')).sort().map(file => `tests/${file}`);
   await command(['--test', ...tests], 'unit-tests.txt');

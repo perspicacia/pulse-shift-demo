@@ -45,10 +45,10 @@ main{max-width:1280px;margin:0 auto;padding:0 48px}.screen{padding:40px 0 36px}.
 
 body[data-key-count="6"] .help-keys kbd:nth-child(2){margin-right:0}body[data-key-count="6"] .help-keys kbd:nth-child(3){margin-right:12px}
 
-/* Original blade-serif wordmark: vector outlines remain crisp without a webfont. */
+/* Original angular neon wordmark: vector outlines remain crisp without a webfont. */
 .brand{min-width:0;min-height:44px;flex-shrink:1}
 .brand-type{display:block;min-width:0}
-.brand-wordmark{width:258px;height:auto;max-width:100%;object-fit:contain}
+.brand-wordmark{width:278px;height:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 0 9px #b8ff3226)}
 .brand small{margin-top:3px;font-size:7px;letter-spacing:2.5px;line-height:1.4}
 .brand-mark,.header-actions{flex-shrink:0}
 @media(max-width:800px){.brand-wordmark{width:228px}.brand small{font-size:6px;letter-spacing:2.3px}}

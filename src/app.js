@@ -145,7 +145,7 @@ function updateDiscSelector() {
     card.dataset.position = String(slot);
     card.style.setProperty('--slot', slot);
     card.style.setProperty('--tilt', `${Math.sign(slot) * 12}deg`);
-    card.setAttribute('aria-description', slot === 0 ? '중앙에 놓인 곡입니다. Enter로 플레이를 시작하세요.' : '선택하면 CD 플레이어 중앙으로 이동합니다.');
+    card.setAttribute('aria-description', slot === 0 ? '중앙에 놓인 곡입니다. Enter로 플레이를 시작하세요.' : '선택하면 LP 턴테이블에 올라갑니다.');
   });
   $('disc-current').textContent = String(current + 1).padStart(2, '0');
   $('disc-selection-status').textContent = `${activeTrack.title}, ${current + 1}/${tracks.length} 곡 선택됨`;
