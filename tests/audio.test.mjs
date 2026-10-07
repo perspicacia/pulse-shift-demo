@@ -243,7 +243,7 @@ test('concurrent original songs render once each, keep distinct buffers, and rec
       requests.push(trackId);
       queueMicrotask(() => {
         if (trackId === 'tidal-circuit' && failTidal) { failTidal = false; this.onmessage({ data: { error: 'render failed' } }); return; }
-        const frames = trackId === 'afterglow' ? 100 : 200;
+        const frames = trackId === 'afterglow' ? 100 : trackId === 'astral-veil' ? 300 : 200;
         this.onmessage({ data: { left: new Float32Array(frames), right: new Float32Array(frames), sampleRate: 44100 } });
       });
     }
@@ -252,14 +252,18 @@ test('concurrent original songs render once each, keep distinct buffers, and rec
   globalThis.window = { AudioContext: Context }; globalThis.Worker = Worker;
   try {
     const audio = new AudioEngine();
-    const results = await Promise.allSettled([audio.init('afterglow'), audio.init('tidal-circuit'), audio.init('tidal-circuit')]);
+    const results = await Promise.allSettled([audio.init('afterglow'), audio.init('tidal-circuit'), audio.init('tidal-circuit'), audio.init('astral-veil'), audio.init('astral-veil')]);
     assert.equal(results[0].status, 'fulfilled');
     assert.equal(results[1].status, 'rejected'); assert.equal(results[2].status, 'rejected');
+    assert.equal(results[3].status, 'fulfilled'); assert.equal(results[4].value, results[3].value);
+    const astral = results[3].value;
+    assert.equal(astral.frames, 300);
+    assert.equal(await audio.init('astral-veil'), astral);
     const tidal = await audio.init('tidal-circuit'), afterglow = results[0].value;
     assert.equal(tidal.frames, 200); assert.equal(afterglow.frames, 100);
     assert.equal(await audio.init('tidal-circuit'), tidal);
     assert.equal(await audio.init('afterglow'), afterglow);
     assert.equal(audio.originalBuffer, afterglow);
-    assert.deepEqual(requests, ['afterglow', 'tidal-circuit', 'tidal-circuit']);
+    assert.deepEqual(requests, ['afterglow', 'tidal-circuit', 'astral-veil', 'tidal-circuit']);
   } finally { globalThis.window = originalWindow; globalThis.Worker = originalWorker; }
 });

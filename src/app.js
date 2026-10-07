@@ -134,7 +134,13 @@ function updateTrack() {
 function updateDiscSelector() {
   const tracks = BUILTIN_TRACKS, current = tracks.findIndex(track => track.id === activeTrack.id);
   tracks.forEach((track, index) => {
-    const slot = index - current;
+    // Keep three discs around the player, including across the first/last song.
+    let slot = index - current;
+    if (tracks.length > 2) {
+      const half = Math.floor(tracks.length / 2);
+      if (slot > half) slot -= tracks.length;
+      if (slot < -half) slot += tracks.length;
+    }
     const card = $(track.buttonId);
     card.dataset.position = String(slot);
     card.style.setProperty('--slot', slot);

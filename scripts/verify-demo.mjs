@@ -179,14 +179,14 @@ try {
   assert.equal((await snapshot()).audio.length, 0, 'No audio should autoplay before a trusted gesture');
   await screenshot('01-v1-track-select'); await check('v1 entry point; audio waits for gesture');
   const catalog=await evaluate(`({tracks:[...document.querySelectorAll('[data-disc-card]')].map(b=>b.dataset.builtinTrack),count:document.getElementById('tracklist-count').textContent,fileInputs:document.querySelectorAll('input[type="file"]').length,importControls:document.querySelectorAll('#music-import,#empty-disc,#custom-track').length})`);
-  assert.deepEqual(catalog,{tracks:['afterglow','tidal-circuit'],count:'02',fileInputs:0,importControls:0});
+  assert.deepEqual(catalog,{tracks:['afterglow','tidal-circuit','astral-veil'],count:'03',fileInputs:0,importControls:0});
   await cdp('Emulation.setDeviceMetricsOverride',{width:375,height:812,deviceScaleFactor:1,mobile:false});
   await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
   assert.equal(await evaluate('document.documentElement.scrollWidth'),375);
   assert.equal(await evaluate(`document.querySelectorAll('[data-disc-card][data-position="0"]').length`),1);
-  await screenshot('00-two-track-mobile');
+  await screenshot('00-three-track-mobile');
   await cdp('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
-  await check('two-song catalog without upload controls; mobile menu has no overflow',{catalog});
+  await check('three-song catalog without upload controls; mobile menu has no overflow',{catalog});
   await key('ArrowRight'); await until('document.getElementById("track-title").textContent === "TIDAL CIRCUIT" && document.getElementById("lobby-music").dataset.state === "playing"');
   await check('trusted key unlocks audio and selects TIDAL CIRCUIT');
   const loadingStarted = Date.now(); await click('#preview-button'); await until('document.getElementById("preview-button").getAttribute("aria-pressed") === "true"');
@@ -260,13 +260,13 @@ try {
 
   await key('Escape'); await until('document.getElementById("pause-dialog").open'); await click('#quit-button'); await until('document.body.dataset.screen === "menu" && document.getElementById("lobby-music").dataset.state === "playing"');
   assert.equal(Number((await evaluate('document.getElementById("best-score").textContent')).replaceAll(',', '')), final.score); await check('menu restores lobby and per-track best record');
-  for (const [selector,title] of [['#track-next','AFTERGLOW'],['#track-next','TIDAL CIRCUIT'],['#track-previous','AFTERGLOW'],['#track-previous','TIDAL CIRCUIT'],['#builtin-track','AFTERGLOW'],['#tidal-track','TIDAL CIRCUIT']]) {
+  for (const [selector,title] of [['#track-next','ASTRAL VEIL'],['#track-next','AFTERGLOW'],['#track-previous','ASTRAL VEIL'],['#track-previous','TIDAL CIRCUIT'],['#builtin-track','AFTERGLOW'],['#astral-track','ASTRAL VEIL'],['#tidal-track','TIDAL CIRCUIT']]) {
     // Native pointer coordinates must be taken after the cover reaches its slot.
     await evaluate(`Promise.all(document.querySelector('.disc-rack').getAnimations({subtree:true}).filter(a=>a.effect.getComputedTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})))`);
     await click(selector);await until(`document.getElementById('track-title').textContent === ${JSON.stringify(title)}`);
     assert.equal(await evaluate(`document.querySelectorAll('[data-disc-card][aria-pressed="true"]').length`),1);
   }
-  await check('two-track wraparound buttons and album cover selection');
+  await check('three-track wraparound buttons and album cover selection');
 
   // A known legacy four-key fixture verifies backward-compatible record separation.
   await evaluate(`(()=>{const r=JSON.parse(localStorage.getItem('pulse-shift-records')||'{}');r['afterglow:easy']={score:500000,accuracy:50,grade:'D',maxCombo:20};localStorage.setItem('pulse-shift-records',JSON.stringify(r))})()`);
