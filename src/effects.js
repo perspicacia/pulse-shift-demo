@@ -45,7 +45,8 @@ export class HitEffects {
     ctx.globalCompositeOperation = 'lighter';
     this.bursts = this.bursts.filter(burst => now - burst.birth < 420);
     for (const burst of this.bursts) {
-      const age = (now - burst.birth) / 420, fade = (1 - age) ** 2 * intensity;
+      // A queued animation frame can predate a newly handled input.
+      const age = Math.max(0, now - burst.birth) / 420, fade = (1 - age) ** 2 * intensity;
       const x = burst.x * width, radius = 12 + age * 72 * burst.power;
       const glow = ctx.createRadialGradient(x, hitY - 3, 0, x, hitY - 3, radius);
       glow.addColorStop(0, '#ffffff'); glow.addColorStop(0.18, burst.color); glow.addColorStop(1, '#00000000');
@@ -64,7 +65,7 @@ export class HitEffects {
       }
     }
     if (this.celebration) {
-      const age = (now - this.celebration.birth) / 1000;
+      const age = Math.max(0, now - this.celebration.birth) / 1000;
       if (age < 1.1) {
         ctx.globalAlpha = (1 - age / 1.1) * intensity * 0.55;
         const halo = ctx.createRadialGradient(width / 2, hitY, 0, width / 2, hitY, width * 0.65);
@@ -74,9 +75,9 @@ export class HitEffects {
     }
     this.particles = this.particles.filter(p => now - p.birth < p.life);
     for (const p of this.particles) {
-      const age = (now - p.birth) / 1000;
+      const age = Math.max(0, now - p.birth) / 1000;
       const x = p.x * width + p.vx * age, y = hitY + p.y + p.vy * age + 160 * age * age;
-      ctx.globalAlpha = (1 - (now - p.birth) / p.life) * intensity;
+      ctx.globalAlpha = (1 - age * 1000 / p.life) * intensity;
       ctx.fillStyle = p.color;
       if (p.star) this.star(ctx, x, y, p.size * 1.3);
       else { ctx.beginPath(); ctx.arc(x, y, p.size * 0.6, 0, Math.PI * 2); ctx.fill(); }

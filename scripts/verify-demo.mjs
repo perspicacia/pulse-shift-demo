@@ -7,10 +7,11 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const pageScheduledInputs = process.env.QA_INPUT_DRIVER === 'page';
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const output = join(root, 'artifacts', 'demo-qa', stamp);
 await mkdir(output, { recursive: true });
-const report = { version: 'v1 / DJMAX-inspired / PULSE SHIFT 0.6.0', baseline: 'pulse-shift-demo standalone snapshot', startedAt: new Date().toISOString(), status: 'running', checks: [], limitations: ['Headless Chrome output is muted. Real speaker/headphone sound, subjective fun and physical input latency require a human rehearsal.', 'Native CDP keyboard input is automated, not a human performance.', 'The catalog contains only the two bundled originals; file import and automatic chart analysis are removed.'] };
+const report = { version: 'v1 / DJMAX-inspired / PULSE SHIFT 0.6.0', baseline: 'pulse-shift-demo standalone snapshot', startedAt: new Date().toISOString(), status: 'running', checks: [], limitations: ['Headless Chrome output is muted. Real speaker/headphone sound, subjective fun and physical input latency require a human rehearsal.', 'Keyboard input is automated, not a human performance. QA_INPUT_DRIVER=page schedules full-song events inside the page; startup, native first-hit/duplicate, hold/release and menu controls still use CDP.', 'The catalog contains only the two bundled originals; file import and automatic chart analysis are removed.'] };
 const log = (message) => console.log(message);
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 let chrome, server, socket, profile, serverLog = '', chromeLog = '', cdp;
@@ -86,6 +87,34 @@ async function songClock() {
 async function waitForNote(time) {
   let remaining;
   while ((remaining = (time - await songClock()) * 1000) > 0) await wait(Math.min(40, remaining));
+}
+// Optional page timer avoids inter-process delivery jitter on busy machines.
+// Fresh keyboard events enter the normal handlers; no score or event time is forged.
+async function schedulePageInputs(plan) {
+  await evaluate(`(() => {
+    const plan = ${JSON.stringify(plan)}; let index = 0;
+    window.__demoAudit.scheduledInputs = 0;
+    function tick() {
+      const c = window.__demoAudit.contexts[0];
+      const source = window.__demoAudit.sources.findLast(s => s.buffer?.duration > 60 && s.auditStart && !s.auditStop);
+      if (!source || document.body.dataset.screen !== 'game') return;
+      if (c.state === 'running' && !document.getElementById('pause-dialog').open) {
+        const stamp = c.getOutputTimestamp(), now = performance.now();
+        const output = stamp.contextTime > 0 && stamp.performanceTime > 0 && now - stamp.performanceTime < 250 ? stamp.contextTime + (now - stamp.performanceTime) / 1000 : c.currentTime - (c.outputLatency || c.baseLatency || 0);
+        const time = output - source.auditStart[0] + (source.auditStart[1] || 0);
+        while (index < plan.length && time >= plan[index].time) {
+          for (const code of plan[index++].codes) {
+            const key = code.slice(3).toLowerCase();
+            window.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true }));
+            window.dispatchEvent(new KeyboardEvent('keyup', { key, code, bubbles: true, cancelable: true }));
+            window.__demoAudit.scheduledInputs++;
+          }
+        }
+      }
+      if (index < plan.length) setTimeout(tick, 4);
+    }
+    tick();
+  })()`);
 }
 async function navigate() {
   await cdp('Page.navigate', { url: report.url });
@@ -176,14 +205,29 @@ try {
   const chart = await evaluate(`import('/src/tracks.js').then(m=>m.BUILTIN_TRACKS[1].charts.normal)`);
   const groups = [];
   for (const note of chart) { const last = groups.at(-1); if (last?.time === note.time) last.notes.push(note); else groups.push({ time: note.time, notes: [note] }); }
+  if (pageScheduledInputs) {
+    let count = 0;
+    const plan = groups.map(group => {
+      const offset = count >= 10 && count < 20 ? (count % 2 ? .1 : .065) : 0;
+      count += group.notes.length;
+      return { time: group.time + offset, codes: group.notes.map(n => ['KeyD','KeyF','KeyJ','KeyK'][n.lane]) };
+    });
+    await schedulePageInputs(plan.slice(1)); // First hit remains native.
+  }
+  report.inputDriver = pageScheduledInputs ? 'page-scheduled full songs; native first hit and UI contracts' : 'native CDP';
   let inputs = 0, capturedPlay = false, playScreenshot = false;
   for (const [groupIndex, group] of groups.entries()) {
     const current = await snapshot();
     assert.equal(current.paused, false, 'Browser lost focus during scheduled playback');
-    assert.equal(current.counts.miss, 0, 'Native input missed a note; capture diagnostic timing immediately');
+    assert.equal(current.counts.miss, 0, 'Scheduled input missed a note; capture diagnostic timing immediately');
     const intentionalOffset = inputs >= 10 && inputs < 20 ? (inputs % 2 ? .1 : .065) : 0;
+    if (pageScheduledInputs && groupIndex > 0) {
+      await until(`window.__demoAudit.scheduledInputs >= ${inputs + group.notes.length - groups[0].notes.length}`);
+      inputs += group.notes.length;
+    } else {
     await waitForNote(group.time + intentionalOffset);
     for (const note of group.notes) { await key(['KeyD', 'KeyF', 'KeyJ', 'KeyK'][note.lane]); inputs++; if (inputs === 1) { const before = (await snapshot()).score; await key(['KeyD', 'KeyF', 'KeyJ', 'KeyK'][note.lane]); await key(['KeyD', 'KeyF', 'KeyJ', 'KeyK'][note.lane], true); assert.equal((await snapshot()).score, before, 'Duplicate/repeat input must not add points'); } }
+    }
     if (!capturedPlay && inputs >= 10) { assert.equal(await comboCount(), 1, 'First 10 combo must play one combo cue'); await check('native inputs, judgments, combo and duplicate protection'); capturedPlay = true; }
     // PNG capture blocks the control process. Use a gap in the authored chart
     // instead of delaying the next native input in a dense run of notes.
@@ -199,15 +243,15 @@ try {
   const final = await evaluate(`({score:Number(document.getElementById('result-score').textContent.replaceAll(',','')),accuracy:parseFloat(document.getElementById('result-accuracy').textContent),combo:Number(document.getElementById('result-combo').textContent),grade:document.getElementById('result-grade').textContent,counts:Object.fromEntries(['perfect','great','good','miss'].map(k=>[k,Number(document.getElementById('result-'+k).textContent)]))})`);
   assert.equal(Object.values(final.counts).reduce((a, b) => a + b, 0), chart.length, 'Every note must resolve exactly once');
   report.tidalInputAudit = await evaluate('({inputs:window.__demoAudit.inputs,judgments:window.__demoAudit.judgments})');
-  assert.equal(final.counts.miss, 0, 'Scheduled native input missed a note; investigate timing instead of weakening this check');
+  assert.equal(final.counts.miss, 0, 'Scheduled input missed a note; investigate timing instead of weakening this check');
   assert.equal(final.combo, chart.length); assert.equal(inputs, chart.length);
   const weight = final.counts.perfect + final.counts.great * 0.7 + final.counts.good * 0.3;
   assert.equal(final.score, Math.round(weight / chart.length * 1000000)); assert.ok(Math.abs(final.accuracy - weight / chart.length * 100) <= 0.0051);
   const expectedGrade = final.accuracy >= 99 ? 'S' : final.accuracy >= 95 ? 'A' : final.accuracy >= 85 ? 'B' : final.accuracy >= 70 ? 'C' : 'D'; assert.equal(final.grade, expectedGrade);
-  assert.ok(final.counts.great > 0 && final.counts.good > 0, 'Native GOOD/GREAT inputs must be exercised');
+  assert.ok(final.counts.great > 0 && final.counts.good > 0, 'GOOD/GREAT inputs must be exercised');
   assert.equal(await comboCount(), 4, 'Only 10/50/100/150 combo milestones may play a cue');
   await check('combo-only effects across GOOD/GREAT/PERFECT inputs', {callouts:4,milestones:[10,50,100,150]});
-  await screenshot('03-v1-results'); await check('one real-time whole song, score oracle and results', { final, notes: chart.length, nativeInputs: inputs });
+  await screenshot('03-v1-results'); await check('one real-time whole song, score oracle and results', { final, notes: chart.length, automatedInputs: inputs, inputDriver: report.inputDriver });
   await click('#retry-button'); await until('document.body.dataset.screen === "game"'); assert.deepEqual((await snapshot()).counts, countsZero); assert.equal((await snapshot()).score, 0); assert.equal((await snapshot()).elapsed, '00:00'); await check('retry resets all gameplay counters');
   const other = await cdp('Target.createTarget', { url: 'about:blank' }); await cdp('Target.activateTarget', { targetId: other.targetId }); await until('document.visibilityState === "hidden" && document.getElementById("pause-dialog").open');
   await cdp('Target.activateTarget', { targetId: target.id }); await until('document.visibilityState === "visible"'); assert.equal((await snapshot()).paused, true); await cdp('Page.bringToFront'); await wait(150); await key('Enter'); await until('!document.getElementById("pause-dialog").open'); await wait(150); assert.equal((await snapshot()).paused, false);
@@ -263,11 +307,13 @@ try {
   assert.ok(await evaluate(`!document.querySelector('[data-lane="0"]').classList.contains('pressed')`));
   await check('six-key experimental selection, six equal lanes and hold/release contract');
   const sixChart = await evaluate(`import('/src/modes.js').then(m=>m.createSixKeyChart())`), sixKeys = ['KeyS','KeyD','KeyF','KeyJ','KeyK','KeyL'];
+  if (pageScheduledInputs) await schedulePageInputs(sixChart.map(note => ({ time: note.time, codes: [sixKeys[note.lane]] })));
   let sixInputs=0,sixShot=false;
   for (const note of sixChart) {
     assert.equal((await snapshot()).paused, false);
-    await waitForNote(note.time);
-    await key(sixKeys[note.lane]); sixInputs++;
+    if (pageScheduledInputs) await until(`window.__demoAudit.scheduledInputs >= ${sixInputs + 1}`);
+    else { await waitForNote(note.time); await key(sixKeys[note.lane]); }
+    sixInputs++;
     if(!sixShot&&sixInputs>=10){await screenshot('04-v1-six-key-experiment');sixShot=true;}
   }
   await until('document.body.dataset.screen === "result"',12000);
@@ -277,7 +323,7 @@ try {
   assert.equal(sixFinal.score,Math.round(sixWeight/sixChart.length*1000000));assert.ok(Math.abs(sixFinal.accuracy-sixWeight/sixChart.length*100)<=.0051);
   assert.ok(await evaluate(`![...document.querySelectorAll('[data-lane]')].some(b=>b.classList.contains('pressed'))`));
   assert.equal(await comboCount() - sixComboBaseline,2,'Six-key song plays cues only at 10 and 50 combo');
-  await screenshot('05-v1-six-key-results');await check('six-key real-time whole song and independent score oracle',{notes:sixChart.length,nativeInputs:sixInputs,final:sixFinal});
+  await screenshot('05-v1-six-key-results');await check('six-key real-time whole song and independent score oracle',{notes:sixChart.length,automatedInputs:sixInputs,inputDriver:report.inputDriver,final:sixFinal});
   await click('#retry-button');await until('document.body.dataset.screen === "game"');assert.deepEqual((await snapshot()).counts,countsZero);assert.equal((await snapshot()).score,0);assert.equal((await snapshot()).elapsed,'00:00');
   await key('Escape');await until('document.getElementById("pause-dialog").open');await click('#quit-button');await until('document.body.dataset.screen === "menu"');
   const stored=await evaluate(`JSON.parse(localStorage.getItem('pulse-shift-records'))`);
