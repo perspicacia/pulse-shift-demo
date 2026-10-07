@@ -1,8 +1,10 @@
 # PULSE SHIFT
 
-세 오리지널 곡을 연주하는 브라우저 리듬 게임입니다. **PULSE SHIFT** 타이틀 아래에서 LP 턴테이블과 양옆 앨범 커버로 곡을 고르고, 원근 레인으로 다가오는 노트를 D·F·J·K로 입력합니다. 중앙 LP는 앨범 아트로 가득 채우며, 곡을 선택하면 해당 곡의 8마디 미리듣기가 자동으로 반복됩니다. 버전 0.6.0이며 기본 4키와 AFTERGLOW LEVEL 1 전용 6키 실험을 제공합니다.
+세 오리지널 곡을 연주하는 브라우저 리듬 게임입니다. **PULSE SHIFT** 타이틀 아래에서 LP 턴테이블과 양옆 앨범 커버로 곡을 고르고, 원근 레인으로 다가오는 노트를 D·F·J·K로 입력합니다. 중앙 LP는 앨범 아트로 가득 채우며, 곡을 선택하면 해당 곡의 8마디 미리듣기가 자동으로 반복됩니다. 버전 0.6.0이며 기본 4키와 AFTERGLOW LEVEL 1·ASTRAL VEIL LEVEL 3의 6키 실험을 제공합니다.
 
 소스 저장소: [perspicacia/pulse-shift-demo](https://github.com/perspicacia/pulse-shift-demo). 이 주소는 소스 검토용이며 게임은 아래 명령으로 로컬에서 실행합니다. 검증 절차와 한계는 [DEMO.md](DEMO.md), 포함 기능은 [CHANGELOG.md](CHANGELOG.md)에 있습니다.
+
+발표 시연: [ASTRAL VEIL 6키 LEVEL 3 ALL PERFECT MP4 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL3_ALL_PERFECT.mp4) · [릴리스 설명](https://github.com/perspicacia/pulse-shift-demo/releases/tag/demo-astral-6k-2026-10-07). 1080p·60fps·약 81초이며 음악·타격음·콤보 효과음을 포함합니다. 같은 게임 코드를 발표용 Canvas 화면으로 렌더한 **자동 입력 시연**이며 실제 브라우저 화면 녹화나 사람의 플레이 기록은 아닙니다. 757 PERFECT·0 MISS·100만 점·정확도 100%를 확인했습니다. MP4는 릴리스 첨부파일로 제공하고 발표 PDF는 로컬에 유지합니다.
 
 ## 실행
 
@@ -21,7 +23,7 @@ npm run dev
 | 기능 | 조작 |
 | --- | --- |
 | 왼쪽부터 4개 레인 | D · F · J · K |
-| AFTERGLOW LEVEL 1 전용 6키 실험 | S · D · F / J · K · L |
+| AFTERGLOW LEVEL 1 / ASTRAL VEIL LEVEL 3의 6키 실험 | S · D · F / J · K · L |
 | 곡 선택 | 메뉴에서 ← · → 또는 플레이어의 좌우 버튼 / 커버 클릭 |
 | 일시정지 / 재개 | Esc |
 | 곡 시작 / 일시정지 후 재개 | Enter 또는 화면 버튼 |
@@ -29,14 +31,14 @@ npm run dev
 
 키를 계속 누르고 있어도 노트가 자동으로 처리되지 않습니다. 동시 노트는 각각의 키를 함께 누릅니다. 창이 포커스를 잃거나 다른 탭으로 이동하면 자동으로 일시정지됩니다.
 
-기본은 4키입니다. AFTERGLOW LEVEL 1에서만 **6키 실험**을 선택할 수 있고, 동시에 최대 두 노트가 나옵니다. 점수 기록은 `곡:4k:레벨`과 `곡:6k:레벨`로 분리하며 이전 4키 기록도 계속 읽습니다. TIDAL CIRCUIT이나 ASTRAL VEIL을 선택하면 4키로 돌아옵니다. 마지막으로 고른 키 모드는 설정에 저장되므로 본 시연 전에는 **4 KEY · 기본**을 선택하세요. 자세한 범위와 검증은 [DEMO.md](DEMO.md)를 확인하세요.
+기본은 4키입니다. **6키 실험**은 AFTERGLOW LEVEL 1(최대 두 동시 노트)과 ASTRAL VEIL LEVEL 3(757노트·최대 세 동시 노트)에서 선택할 수 있습니다. 곡에 맞는 지원 난이도를 자동 선택하며 TIDAL CIRCUIT을 고르면 4키로 돌아옵니다. 점수 기록은 `곡:4k:레벨`과 `곡:6k:레벨`로 분리하며 이전 4키 기록도 계속 읽습니다. 마지막으로 고른 키 모드는 설정에 저장되므로 기본 시연 전에는 **4 KEY · 기본**을 선택하세요. 자세한 범위와 검증은 [DEMO.md](DEMO.md)를 확인하세요.
 
 ## 포함된 기능
 
 - 오리지널 곡 **AFTERGLOW** — PULSE LAB, 148 BPM, 약 67초.
 - 오리지널 곡 **TIDAL CIRCUIT** — PULSE LAB, 132 BPM, 약 76초. 모듈러 신스·깊은 베이스·스윙이 있는 브로큰 비트.
 - 오리지널 곡 **ASTRAL VEIL** — PULSE LAB, 126 BPM, 약 72초. 어두운 전자 베이스·별빛 아르페지오·넓은 패드와 합성 코러스.
-- 4키 LEVEL 1 / LEVEL 2 / LEVEL 3 난이도와 일반 노트, 동시 노트. 6키 실험은 AFTERGLOW LEVEL 1만 지원.
+- 4키 LEVEL 1 / LEVEL 2 / LEVEL 3 난이도와 일반 노트, 동시 노트. 6키 실험은 AFTERGLOW LEVEL 1과 ASTRAL VEIL LEVEL 3 지원.
 - 노트 속도 ×1.0–×6.0, 싱크 보정 −200–+200 ms.
 - 판정선의 팝·링·별빛 입자와 판정·콤보 팝 애니메이션, 음정 없는 짧고 부드러운 타격음.
 - 첫 10콤보와 이후 50·100·150콤보의 축하 효과음·배너·컨페티. 같은 구간은 곡당 한 번만 보상.
@@ -130,7 +132,7 @@ assets/astral-veil.svg ASTRAL VEIL 벡터 앨범 아트
 assets/*-disc.svg    세 곡의 원형 안전 영역을 적용한 LP 전체 아트
 assets/sfx/README.md 자체 합성 효과음 안내
 src/game.js          곡 정보, 채보, 판정, 점수
-src/modes.js         4키 보존·AFTERGLOW 6키 실험 채보·모드별 기록 키
+src/modes.js         4키 보존·AFTERGLOW/ASTRAL 6키 채보·모드별 기록 키
 src/tracks.js        오리지널 곡 목록·메타데이터·채보
 src/tidal-score.js   TIDAL CIRCUIT 악기 이벤트와 3개 채보
 src/synth-tidal.js   TIDAL CIRCUIT 스테레오 합성
@@ -176,7 +178,7 @@ npm run check
 npm run verify:demo
 ```
 
-단위 검사는 54개입니다. `verify:demo`는 단위·문법 검사와 설치된 Chrome/Chromium의 임시 프로필을 사용하는 23개 브라우저 흐름 검사를 한 번에 실행합니다. 4키 TIDAL CIRCUIT 168노트와 6키 AFTERGLOW 78노트를 각각 실제 시간으로 완주하며 약 3분이 걸립니다. 결과·PNG·SHA-256·오류 로그는 Git에서 제외된 `artifacts/demo-qa/`에 저장됩니다. 사용자의 Chrome 탭을 사용하거나 브라우저를 자동 설치하지 않으며, 브라우저 검증이 불가능하면 실패로 반환합니다. 실행 조건과 산출물 설명은 [DEMO.md](DEMO.md)를 확인하세요.
+단위 검사는 56개입니다. `verify:demo`는 단위·문법 검사와 설치된 Chrome/Chromium의 임시 프로필을 사용하는 23개 브라우저 흐름 검사를 한 번에 실행합니다. 4키 TIDAL CIRCUIT 168노트와 6키 AFTERGLOW 78노트를 각각 실제 시간으로 완주하며 약 3분이 걸립니다. ASTRAL 6키의 전 노트 PERFECT는 단위 검사와 발표 영상 렌더에서 확인하며 위 23개 자동 브라우저 흐름에는 포함하지 않습니다. 결과·PNG·SHA-256·오류 로그는 Git에서 제외된 `artifacts/demo-qa/`에 저장됩니다. 사용자의 Chrome 탭을 사용하거나 브라우저를 자동 설치하지 않으며, 브라우저 검증이 불가능하면 실패로 반환합니다. 실행 조건과 산출물 설명은 [DEMO.md](DEMO.md)를 확인하세요.
 
 2026-10-07 LP 전체 아트·선택곡 자동 미리듣기 변경은 단위 54개와 문법 검사를 통과했습니다. 인앱 브라우저에서 세 곡 전환·반복 재생, 기본 대기 음악 꺼짐 상태의 자동 미리듣기, 수동 정지 유지·중앙 커버 재선택, 설정·도움말·음소거·게임 진입/메뉴 복귀, 375px 화면의 전체 아트와 가로 넘침 없음을 확인했습니다. 예상 밖 콘솔 오류는 없었습니다. 이번 변경에서 전체 곡 23개 회귀 흐름은 재실행하지 않았으며, 실제 청감과 모바일 기기는 별도 확인 범위입니다.
 
