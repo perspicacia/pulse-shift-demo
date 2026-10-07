@@ -1,4 +1,5 @@
 import { createPercussion, createComboCue, localMusicLevel } from './feedback-sound.js';
+import { previewSamples } from './selected-preview.js';
 
 export class AudioEngine {
   constructor() {
@@ -25,6 +26,9 @@ export class AudioEngine {
     this.musicReady = new Map();
     this.musicBuffers = new Map();
     this.originalBuffer = null;
+    this.previewSource = null;
+    this.previewGain = null;
+    this.previewBuffers = new WeakMap();
   }
 
   async initContext() {
@@ -139,11 +143,52 @@ export class AudioEngine {
   }
 
   stop() {
+    this.stopPreview();
     if (this.source) { try { this.source.stop(); } catch {} this.source.disconnect(); }
     this.source = null;
     this.pausedTime = null;
     this.pausedContextTime = null;
     this.stopFeedback();
+  }
+
+  playPreview(buffer, range) {
+    if (!buffer || !this.context || this.context.state !== 'running' || this.source) return false;
+    this.stopPreview();
+    this.stopLobby();
+    let loops = this.previewBuffers.get(buffer);
+    if (!loops) { loops = new Map(); this.previewBuffers.set(buffer, loops); }
+    const key = `${range.offset}:${range.length}`;
+    if (!loops.has(key)) {
+      const channels = Array.from({ length: buffer.numberOfChannels }, (_, channel) => previewSamples(buffer.getChannelData(channel), buffer.sampleRate, range));
+      const loop = this.context.createBuffer(channels.length, channels[0].length, buffer.sampleRate);
+      channels.forEach((samples, channel) => loop.getChannelData(channel).set(samples));
+      loops.set(key, loop);
+    }
+    const source = this.context.createBufferSource(), gain = this.context.createGain();
+    source.buffer = loops.get(key);
+    source.loop = true;
+    source.loopStart = 0;
+    source.loopEnd = source.buffer.duration;
+    const start = this.context.currentTime + 0.12;
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(1, start + 0.05);
+    source.connect(gain).connect(this.musicBus);
+    source.onended = () => {
+      source.disconnect(); gain.disconnect();
+      if (this.previewSource === source) { this.previewSource = null; this.previewGain = null; }
+    };
+    this.previewSource = source;
+    this.previewGain = gain;
+    source.start(start);
+    return true;
+  }
+
+  stopPreview() {
+    if (!this.previewSource) return;
+    const source = this.previewSource;
+    this.previewSource = null; this.previewGain = null;
+    try { source.stop(); } catch {}
+    source.onended?.();
   }
 
   setVolume(volume) {
@@ -155,7 +200,7 @@ export class AudioEngine {
   setLobbyVolume(volume) { this.lobbyVolume = volume; this.setBusVolume(this.lobbyBus, volume); }
 
   playLobby(buffer) {
-    if (!buffer || !this.context || this.context.state !== 'running' || this.source || this.lobbyVolume <= 0) return false;
+    if (!buffer || !this.context || this.context.state !== 'running' || this.source || this.previewSource || this.lobbyVolume <= 0) return false;
     if (this.lobbySource) return true;
     // Rapid mute/unmute must not stack sources which are still fading out.
     for (const source of this.lobbyFades) { try { source.stop(); } catch {} source.onended?.(); }

@@ -187,13 +187,13 @@ try {
   await screenshot('00-three-track-mobile');
   await cdp('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await check('three-song catalog without upload controls; mobile menu has no overflow',{catalog});
-  await key('ArrowRight'); await until('document.getElementById("track-title").textContent === "TIDAL CIRCUIT" && document.getElementById("lobby-music").dataset.state === "playing"');
-  await check('trusted key unlocks audio and selects TIDAL CIRCUIT');
-  const loadingStarted = Date.now(); await click('#preview-button'); await until('document.getElementById("preview-button").getAttribute("aria-pressed") === "true"');
-  const pcm = await evaluate(`(()=>{const b=window.__demoAudit.sources.findLast(s=>s.buffer?.duration>60&&!s.auditStop).buffer,a=b.getChannelData(0);let squares=0,peak=0;for(let i=0;i<a.length;i+=16){squares+=a[i]*a[i];peak=Math.max(peak,Math.abs(a[i]))}return{duration:b.duration,channels:b.numberOfChannels,sampleRate:b.sampleRate,rms:Math.sqrt(squares/(a.length/16)),peak}})()`);
+  const loadingStarted = Date.now();
+  await key('ArrowRight'); await until('document.getElementById("track-title").textContent === "TIDAL CIRCUIT" && document.getElementById("lobby-music").dataset.state === "playing" && document.getElementById("preview-button").getAttribute("aria-pressed") === "true"');
+  await check('trusted selection unlocks audio and automatically previews TIDAL CIRCUIT');
+  const pcm = await evaluate(`(()=>{const b=window.__demoAudit.sources.findLast(s=>s.loop&&s.buffer?.duration<20&&!s.auditStop).buffer,a=b.getChannelData(0);let squares=0,peak=0;for(let i=0;i<a.length;i+=16){squares+=a[i]*a[i];peak=Math.max(peak,Math.abs(a[i]))}return{duration:b.duration,channels:b.numberOfChannels,sampleRate:b.sampleRate,rms:Math.sqrt(squares/(a.length/16)),peak}})()`);
   assert.ok(pcm.rms > 0.001 && pcm.peak <= 1 && pcm.channels === 2);
   await check('original preview has running stereo PCM', { loadingMs: Date.now() - loadingStarted, pcm });
-  await key('ArrowLeft'); await until('document.getElementById("track-title").textContent === "AFTERGLOW"'); assert.equal((await snapshot()).preview, 'false');
+  await key('ArrowLeft'); await until('document.getElementById("track-title").textContent === "AFTERGLOW" && document.getElementById("preview-button").getAttribute("aria-pressed") === "true"');
   await key('ArrowRight'); await click('[data-difficulty="normal"]'); await click('#start-button'); await until('document.body.dataset.screen === "game"');
   const countsZero = { perfect: 0, great: 0, good: 0, miss: 0 };
   assert.deepEqual((await snapshot()).counts, countsZero); await check('start countdown and clean session');
@@ -259,7 +259,7 @@ try {
   const resumedBefore = await evaluate('window.__demoAudit.contexts[0].currentTime'); await wait(500); assert.equal((await snapshot()).paused, false); assert.ok(await evaluate('window.__demoAudit.contexts[0].currentTime') > resumedBefore);
 
   await key('Escape'); await until('document.getElementById("pause-dialog").open'); await click('#quit-button'); await until('document.body.dataset.screen === "menu" && document.getElementById("lobby-music").dataset.state === "playing"');
-  assert.equal(Number((await evaluate('document.getElementById("best-score").textContent')).replaceAll(',', '')), final.score); await check('menu restores lobby and per-track best record');
+  assert.equal(Number((await evaluate('document.getElementById("best-score").textContent')).replaceAll(',', '')), final.score); await check('menu restores selected song preview and per-track best record');
   for (const [selector,title] of [['#track-next','ASTRAL VEIL'],['#track-next','AFTERGLOW'],['#track-previous','ASTRAL VEIL'],['#track-previous','TIDAL CIRCUIT'],['#builtin-track','AFTERGLOW'],['#astral-track','ASTRAL VEIL'],['#tidal-track','TIDAL CIRCUIT']]) {
     // Native pointer coordinates must be taken after the cover reaches its slot.
     await evaluate(`Promise.all(document.querySelector('.disc-rack').getAnimations({subtree:true}).filter(a=>a.effect.getComputedTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})))`);

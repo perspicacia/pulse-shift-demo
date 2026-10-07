@@ -4,6 +4,7 @@ import { BUILTIN_TRACKS } from './tracks.js';
 import { HitEffects } from './effects.js';
 import { highwayGeometry, drawHighway } from './highway.js';
 import { LobbyMusic } from './lobby-music.js';
+import { SelectedPreview } from './selected-preview.js';
 import { keysFor, chartFor, modeRecordKey } from './modes.js';
 
 const $ = id => document.getElementById(id);
@@ -32,8 +33,7 @@ const settings = {
 };
 let records = read('pulse-shift-records', {});
 if (!records || typeof records !== 'object') records = {};
-let state = 'menu', session = null, previewing = false, previewTimer = 0, actionToken = 0;
-let previewLoading = false;
+let state = 'menu', session = null, actionToken = 0;
 let held = new Set(), laneFlashes = [0, 0, 0, 0], lastFeedback = 0;
 let celebrationUntil = 0;
 let feedbackType = '', uiTime = 0, canvasWidth = 0, canvasHeight = 0, lastNoteIndex = 0;
@@ -42,24 +42,53 @@ const canvas = $('game-canvas'), ctx = canvas.getContext('2d');
 let laneButtons = [...document.querySelectorAll('[data-lane]')];
 const inputKeys = () => keysFor(settings.keyCount);
 const activeChart = () => chartFor(activeTrack, settings.keyCount, settings.difficulty);
+let lobbyStatus = 'idle';
+const selectedPreview = new SelectedPreview(audio, {
+  canPlay: () => state === 'menu' && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && settings.volume > 0,
+  onState: () => { lobby.sync(); renderMenuMusic(); },
+  onError: error => { $('menu-error').textContent = error.message; $('menu-error').hidden = false; },
+});
 const lobby = new LobbyMusic(audio, {
   enabled: settings.lobbyEnabled,
-  canPlay: () => state === 'menu' && !previewing && !previewLoading && !document.hidden && !$('settings-dialog').open && settings.lobbyVolume > 0,
-  onState: status => {
-    const enabled = lobby.unlocked && lobby.enabled;
-    $('lobby-music').dataset.state = status;
-    $('lobby-toggle').setAttribute('aria-pressed', String(enabled));
-    $('lobby-toggle').setAttribute('aria-label', enabled ? '대기 음악 끄기' : '대기 음악 켜기');
-    $('lobby-toggle-label').textContent = enabled ? '끄기' : '켜기';
-    $('lobby-toggle').querySelector('use').setAttribute('href', enabled ? '#i-pause' : '#i-play');
-    $('lobby-status').textContent = { idle: '첫 클릭이나 키 입력으로 시작', off: '대기 음악 꺼짐', loading: '음악 준비 중…', playing: '대기 음악 재생 중', paused: settings.lobbyVolume <= 0 ? '설정에서 대기 음악 음량을 올려주세요' : '잠시 대기 중', error: '다시 켜기를 눌러주세요' }[status];
-    if (status === 'error') {
-      $('lobby-toggle').setAttribute('aria-label', '대기 음악 다시 켜기');
-      $('lobby-toggle-label').textContent = '다시 켜기';
-    }
-  },
+  canPlay: () => state === 'menu' && !selectedPreview.track && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && settings.lobbyVolume > 0,
+  onState: status => { lobbyStatus = status; renderMenuMusic(); },
   onError: error => toast(error.message),
 });
+
+function renderMenuMusic() {
+  const chosen = selectedPreview.track;
+  const status = chosen ? selectedPreview.status : lobbyStatus;
+  const enabled = chosen ? selectedPreview.unlocked && selectedPreview.requested : lobby.unlocked && lobby.enabled;
+  const name = chosen ? '선택곡 미리듣기' : '대기 음악';
+  $('lobby-music').dataset.state = status;
+  $('lobby-music').setAttribute('aria-label', `${name} ${chosen?.title || 'NEON HALO'}`);
+  document.querySelector('.lobby-title span').textContent = chosen ? 'SELECTED TRACK' : 'LOBBY RADIO';
+  document.querySelector('.lobby-title strong').textContent = chosen?.title || 'NEON HALO';
+  $('lobby-toggle').setAttribute('aria-pressed', String(enabled));
+  $('lobby-toggle').setAttribute('aria-label', `${name} ${status === 'error' ? '다시 켜기' : enabled ? '끄기' : '켜기'}`);
+  $('lobby-toggle-label').textContent = status === 'error' ? '다시 켜기' : enabled ? '끄기' : '켜기';
+  $('lobby-toggle').querySelector('use').setAttribute('href', enabled && status !== 'error' ? '#i-pause' : '#i-play');
+  const muted = chosen ? settings.volume <= 0 : settings.lobbyVolume <= 0;
+  $('lobby-status').textContent = {
+    idle: '첫 입력으로 시작 · 곡을 고르면 자동 미리듣기', off: `${name} 꺼짐`, loading: '음악 준비 중…',
+    playing: chosen ? '선택곡 미리듣기 반복 재생 중' : '대기 음악 재생 중',
+    paused: muted ? `설정에서 ${chosen ? '음악' : '대기 음악'} 음량을 올려주세요` : '잠시 대기 중',
+    error: '다시 켜기를 눌러주세요',
+  }[status];
+  const playing = Boolean(chosen && status === 'playing');
+  $('preview-button').setAttribute('aria-pressed', String(playing));
+  $('preview-button').setAttribute('aria-label', `${activeTrack.title} ${playing || chosen && status === 'loading' ? '미리듣기 중지' : '음악 미리듣기'}`);
+  $('preview-button').disabled = false;
+  $('preview-label').textContent = playing ? '미리듣기 중지' : chosen && status === 'loading' ? '준비 중 · 취소' : '미리듣기';
+  $('preview-button').querySelector('use').setAttribute('href', playing || chosen && status === 'loading' ? '#i-pause' : '#i-play');
+  $('disc-selector').classList.toggle('is-previewing', playing);
+  $('deck-state').textContent = !chosen ? 'READY' : { playing: 'PLAYING', loading: 'LOADING', paused: 'PAUSED', error: 'ERROR', off: 'READY', idle: 'READY' }[status];
+}
+
+function syncMenuMusic() {
+  lobby.sync();
+  selectedPreview.sync();
+}
 
 function formatTime(time) {
   const value = Math.max(0, Math.round(time));
@@ -78,7 +107,7 @@ function screen(name) {
   $('settings-button').disabled = name === 'game';
   $('help-button').disabled = name === 'game';
   document.body.dataset.screen = name;
-  lobby.sync();
+  syncMenuMusic();
   window.scrollTo(0, 0);
 }
 
@@ -160,9 +189,11 @@ function stepTrack(direction, focusDisc = false) {
 
 function selectTrack(track) {
   if (state !== 'menu' || !track) return;
-  if (track.id === activeTrack.id) return;
-  actionToken++; stopPreview(); audio.stop();
+  actionToken++;
+  if (track.id !== activeTrack.id) audio.stop();
   activeTrack = track;
+  $('menu-error').hidden = true;
+  selectedPreview.select(track);
   updateTrack();
 }
 
@@ -235,56 +266,17 @@ function updateSettings(persist = true) {
   audio.setEffectsVolume(settings.effectsVolume);
   audio.setComboVolume(settings.comboVolume);
   audio.setLobbyVolume(settings.lobbyVolume);
-  lobby.sync();
+  syncMenuMusic();
   $('note-count').textContent = `${activeChart().length} NOTES`;
   for (const button of document.querySelectorAll('[data-difficulty]')) button.setAttribute('aria-pressed', button.dataset.difficulty === settings.difficulty);
   updateBest();
   if (persist) write('pulse-shift-settings', settings);
 }
 
-function stopPreview() {
-  clearTimeout(previewTimer);
-  if (previewing) audio.stop();
-  previewing = false;
-  previewLoading = false;
-  $('preview-button').setAttribute('aria-pressed', 'false');
-  $('preview-label').textContent = '미리듣기';
-  $('disc-selector').classList.remove('is-previewing');
-  $('deck-state').textContent = 'READY';
-  $('preview-button').querySelector('use').setAttribute('href', '#i-play');
-  lobby.sync();
-}
-
-async function preview() {
+function preview() {
   if (state !== 'menu') return;
-  if (previewing) { stopPreview(); actionToken++; return; }
-  const token = ++actionToken;
-  previewLoading = true;
-  lobby.sync();
-  const button = $('preview-button');
-  button.disabled = true;
-  $('preview-label').textContent = '음악 준비 중…';
   $('menu-error').hidden = true;
-  try {
-    const buffer = await prepareAudio();
-    if (token !== actionToken || state !== 'menu' || document.hidden) return;
-    const offset = Math.min(activeTrack.duration / 2, activeTrack.previewBeat * 60 / activeTrack.bpm);
-    audio.play({ buffer, offset });
-    previewing = true;
-    button.setAttribute('aria-pressed', 'true');
-    $('preview-label').textContent = '미리듣기 중지';
-    $('disc-selector').classList.add('is-previewing');
-    $('deck-state').textContent = 'PLAYING';
-    button.querySelector('use').setAttribute('href', '#i-pause');
-    previewTimer = setTimeout(stopPreview, Math.min(16, activeTrack.duration - offset) * 1000);
-  } catch (error) {
-    $('menu-error').textContent = error.message;
-    $('menu-error').hidden = false;
-  } finally {
-    button.disabled = false;
-    if (token === actionToken) { previewLoading = false; lobby.sync(); }
-    if (!previewing) $('preview-label').textContent = '미리듣기';
-  }
+  selectedPreview.toggle(activeTrack);
 }
 
 function clearHeld() {
@@ -296,7 +288,7 @@ async function start() {
   if (!['menu', 'result'].includes(state)) return;
   state = 'loading';
   const token = ++actionToken;
-  stopPreview();
+  syncMenuMusic();
   $('menu-error').hidden = true;
   $('start-button').disabled = true;
   $('retry-button').disabled = true;
@@ -575,7 +567,7 @@ for (const [id, field, multiplier] of [['volume-input', 'volume', 0.01], ['lobby
 const comboPreviewButtons = [...document.querySelectorAll('[data-combo-preview]')];
 for (const button of comboPreviewButtons) button.addEventListener('click', async () => {
   comboPreviewButtons.forEach(button => { button.disabled = true; });
-  stopPreview();
+  syncMenuMusic();
   try {
     await audio.prepareFeedback();
     if (!$('settings-dialog').open || !['menu', 'result'].includes(state)) return;
@@ -596,10 +588,10 @@ $('hit-preview-button').addEventListener('click', async () => {
   } catch (error) { toast(error.message); }
   finally { button.disabled = false; }
 });
-$('settings-dialog').addEventListener('close', () => { audio.stopFeedback(); lobby.sync(); });
+for (const id of ['settings-dialog', 'help-dialog']) $(id).addEventListener('close', () => { audio.stopFeedback(); syncMenuMusic(); });
 reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) clearEffects(); });
-for (const id of ['settings-button', 'sync-button']) $(id).addEventListener('click', () => { $('settings-dialog').showModal(); lobby.sync(); });
-$('help-button').addEventListener('click', () => $('help-dialog').showModal());
+for (const id of ['settings-button', 'sync-button']) $(id).addEventListener('click', () => { $('settings-dialog').showModal(); syncMenuMusic(); });
+$('help-button').addEventListener('click', () => { $('help-dialog').showModal(); syncMenuMusic(); });
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
 for (const dialog of [$('settings-dialog'), $('help-dialog')]) dialog.addEventListener('click', event => {
   if (event.target === dialog) {
@@ -657,20 +649,26 @@ for (const button of laneButtons) {
 }
 window.addEventListener('blur', () => { clearHeld(); if (state === 'playing') pause(); });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { if (state === 'menu') actionToken++; stopPreview(); clearHeld(); if (state === 'playing') pause(); }
-  lobby.sync();
+  if (document.hidden) { clearHeld(); if (state === 'playing') pause(); }
+  syncMenuMusic();
 });
 $('lobby-toggle').addEventListener('click', () => {
+  if (selectedPreview.track) { preview(); return; }
   settings.lobbyEnabled = lobby.toggle();
   write('pulse-shift-settings', settings);
 });
 // Autoplay is unlocked by a real interaction, never by a synthetic click or timer.
 window.addEventListener('click', event => {
-  if (event.isTrusted && state === 'menu' && !event.target.closest('#lobby-toggle')) lobby.unlock();
-});
+  if (!event.isTrusted || state !== 'menu') return;
+  selectedPreview.unlock();
+  if (!event.target.closest('#lobby-toggle')) lobby.unlock();
+}, { capture: true });
 window.addEventListener('keydown', event => {
-  if (event.isTrusted && state === 'menu' && !event.target.closest('#lobby-toggle') && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey && !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) lobby.unlock();
-});
+  if (!event.isTrusted || state !== 'menu' || event.repeat || event.metaKey || event.ctrlKey || event.altKey || ['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) return;
+  selectedPreview.unlock();
+  if (!event.target.closest('#lobby-toggle')) lobby.unlock();
+}, { capture: true });
+window.addEventListener('pagehide', () => { selectedPreview.invalidate(); audio.stopLobby(); audio.stop(); });
 if (new URLSearchParams(location.search).get('help') === '1') $('help-dialog').showModal();
 updateTrack();
 screen('menu');

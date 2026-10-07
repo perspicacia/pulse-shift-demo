@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none" role="img" aria-labelledby="title desc">
+  
+  <title id="title">ASTRAL VEIL 원형 LP 아트</title><desc id="desc">보랏빛 성운과 궤도를 원판 전체에 인쇄한 ASTRAL VEIL LP 아트. 앨범 제목은 원형 인쇄 안전 영역 안에 배치했습니다.</desc>
+  <defs>
+    <radialGradient id="nebula" cx="56%" cy="42%" r="72%"><stop stop-color="#5d2a86"/><stop offset=".45" stop-color="#20143e"/><stop offset="1" stop-color="#080b1e"/></radialGradient>
+    <radialGradient id="halo"><stop stop-color="#e0c6ff" stop-opacity=".65"/><stop offset=".32" stop-color="#a477ef" stop-opacity=".24"/><stop offset="1" stop-color="#664ddc" stop-opacity="0"/></radialGradient>
+    <linearGradient id="orbit" x2="1" y2="1"><stop stop-color="#b6ffed"/><stop offset=".45" stop-color="#b999ff"/><stop offset="1" stop-color="#f5b5df"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="6"/></filter>
+    <linearGradient id="print-fade" x1="0" y1="520" x2="0" y2="760" gradientUnits="userSpaceOnUse"><stop stop-color="#060b1400"/><stop offset=".6" stop-color="#060b14" stop-opacity=".76"/><stop offset="1" stop-color="#060b14" stop-opacity=".92"/></linearGradient>
+  </defs>
+  <path fill="url(#nebula)" d="M0 0h800v800H0z"/>
+  <circle cx="410" cy="356" r="282" fill="url(#halo)"/>
+  <g fill="none" stroke="url(#orbit)" transform="rotate(-28 400 360)">
+    <ellipse cx="400" cy="360" rx="284" ry="94" stroke-width="12" opacity=".4" filter="url(#glow)"/>
+    <ellipse cx="400" cy="360" rx="284" ry="94" stroke-width="2.5"/>
+    <ellipse cx="400" cy="360" rx="248" ry="146" stroke-width="1" opacity=".45"/>
+    <ellipse cx="400" cy="360" rx="198" ry="206" stroke-width="1" opacity=".25"/>
+  </g>
+  <circle cx="400" cy="360" r="96" fill="#111329" stroke="#d7b6ff" stroke-opacity=".55"/>
+  <path d="M313 320a96 96 0 0 1 176 83" fill="none" stroke="#b6ffed" stroke-width="5" filter="url(#glow)"/>
+  <path d="M313 320a96 96 0 0 1 176 83" fill="none" stroke="#e1caff" stroke-width="1.5"/>
+  <g fill="#d8e9ff"><circle cx="117" cy="157" r="2"/><circle cx="229" cy="95" r="1.5"/><circle cx="634" cy="141" r="2.5"/><circle cx="693" cy="432" r="2"/><circle cx="146" cy="507" r="1.5"/><circle cx="577" cy="532" r="1.8"/><circle cx="313" cy="207" r="1.5"/><circle cx="706" cy="227" r="1"/><circle cx="84" cy="358" r="1"/></g>
+  <path d="M620 241v18m-9-9h18M197 440v14m-7-7h14" stroke="#befced" stroke-width="1.5"/>
+  <path d="M0 520h800v280H0z" fill="url(#print-fade)"/>
+  <circle cx="400" cy="400" r="376" stroke="#e7d8ff" stroke-opacity=".2"/>
+  <g fill="#e7d8ff" font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="400" y="111" font-size="18" letter-spacing="4">PULSE LAB / 003</text>
+    <text x="400" y="641" font-size="48" font-weight="700" letter-spacing="3">ASTRAL VEIL</text>
+    <text x="400" y="681" font-size="17" letter-spacing="3">ORIGINAL / 126 BPM</text>
+  </g>
+</svg>
