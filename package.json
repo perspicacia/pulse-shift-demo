@@ -11,7 +11,7 @@
     "start": "node server.mjs",
     "render:lobby": "node scripts/render-lobby.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check src/feedback-sound.js && node --check src/effects.js && node --check src/highway.js && node --check src/app.js && node --check src/audio.js && node --check src/lobby-music.js && node --check src/synth-lobby.js && node --check src/tracks.js && node --check src/tidal-score.js && node --check src/synth-tidal.js && node --check src/synth.js && node --check src/synth-worker.js && node --check src/game.js && node --check server.mjs && node --check scripts/render-lobby.mjs && node --check src/modes.js && node --check scripts/verify-demo.mjs",
+    "check": "node --check src/feedback-sound.js && node --check src/effects.js && node --check src/highway.js && node --check src/app.js && node --check src/audio.js && node --check src/lobby-music.js && node --check src/selected-preview.js && node --check src/synth-lobby.js && node --check src/tracks.js && node --check src/tidal-score.js && node --check src/astral-score.js && node --check src/synth-astral.js && node --check src/synth-tidal.js && node --check src/synth.js && node --check src/synth-worker.js && node --check src/game.js && node --check server.mjs && node --check scripts/render-lobby.mjs && node --check src/modes.js && node --check scripts/verify-demo.mjs",
     "verify:demo": "node scripts/verify-demo.mjs"
   }
 }

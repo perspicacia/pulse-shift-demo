@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">AFTERGLOW 원형 LP 아트</title><desc id="desc">잔광과 라임색 파형을 원판 전체에 인쇄한 AFTERGLOW LP 아트. 앨범 제목은 원형 인쇄 안전 영역 안에 배치했습니다.</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="0" x2="720" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#193538"/><stop offset=".5" stop-color="#103235"/><stop offset="1" stop-color="#0a141c"/></linearGradient>
+    <linearGradient id="ring" x1="210" y1="150" x2="620" y2="660" gradientUnits="userSpaceOnUse"><stop stop-color="#d5ff56"/><stop offset=".43" stop-color="#98f8a6"/><stop offset=".76" stop-color="#57cfdd"/><stop offset="1" stop-color="#20849c"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#9aeebe" stop-opacity=".3"/><stop offset="1" stop-color="#50a7a1" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" stroke="#c5fff3" stroke-opacity=".055"/></pattern>
+    <filter id="blur"><feGaussianBlur stdDeviation="24"/></filter>
+    <linearGradient id="print-fade" x1="0" y1="520" x2="0" y2="760" gradientUnits="userSpaceOnUse"><stop stop-color="#060b1400"/><stop offset=".6" stop-color="#060b14" stop-opacity=".76"/><stop offset="1" stop-color="#060b14" stop-opacity=".92"/></linearGradient>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h800v800H0z"/>
+  <path fill="url(#grid)" d="M0 0h800v800H0z"/>
+  <circle cx="400" cy="390" r="380" fill="url(#glow)"/>
+  <circle cx="401" cy="401" r="237" stroke="#a2ffb6" stroke-width="25" opacity=".14" filter="url(#blur)"/>
+  <g transform="rotate(-27 400 400)">
+    <ellipse cx="400" cy="400" rx="254" ry="242" stroke="#060f15" stroke-width="66"/>
+    <ellipse cx="400" cy="390" rx="253" ry="241" stroke="url(#ring)" stroke-width="43"/>
+    <ellipse cx="400" cy="384" rx="249" ry="237" stroke="#d7ffc4" stroke-opacity=".65" stroke-width="2"/>
+    <ellipse cx="400" cy="389" rx="217" ry="206" stroke="#45a7aa" stroke-width="2"/>
+    <ellipse cx="400" cy="391" rx="189" ry="180" stroke="url(#ring)" stroke-width="16"/>
+    <ellipse cx="400" cy="391" rx="162" ry="154" stroke="#9fe5b7" stroke-opacity=".6" stroke-width="2"/>
+    <ellipse cx="400" cy="391" rx="132" ry="125" stroke="url(#ring)" stroke-width="7"/>
+    <ellipse cx="400" cy="391" rx="112" ry="106" stroke="#97ffb4" stroke-opacity=".27" stroke-width="1"/>
+  </g>
+  <path d="M60 414h170l31-79 50 142 51-229 65 294 51-146 24 48h215" stroke="#051b21" stroke-width="33" stroke-linejoin="round"/>
+  <path d="M60 405h170l31-79 50 142 51-229 65 294 51-146 24 48h215" stroke="#bfff65" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M0 520h800v280H0z" fill="url(#print-fade)"/>
+  <circle cx="400" cy="400" r="376" stroke="#d3ffb0" stroke-opacity=".2"/>
+  <g fill="#d3ffb0" font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="400" y="111" font-size="18" letter-spacing="4">PULSE LAB / 001</text>
+    <text x="400" y="641" font-size="48" font-weight="700" letter-spacing="3">AFTERGLOW</text>
+    <text x="400" y="681" font-size="17" letter-spacing="3">ORIGINAL / 148 BPM</text>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">TIDAL CIRCUIT 원형 LP 아트</title><desc id="desc">파도와 모듈러 회로를 원판 전체에 인쇄한 TIDAL CIRCUIT LP 아트. 앨범 제목은 원형 인쇄 안전 영역 안에 배치했습니다.</desc>
+  <defs>
+    <linearGradient id="bg" x2="800" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#303d40"/><stop offset=".5" stop-color="#143d43"/><stop offset="1" stop-color="#102126"/></linearGradient>
+    <linearGradient id="tide" x1="150" y1="160" x2="630" y2="620" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe4b1"/><stop offset=".45" stop-color="#dea673"/><stop offset="1" stop-color="#73cbc3"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#dbb98a" stop-opacity=".18"/><stop offset="1" stop-color="#dbb98a" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" stroke="#cef0e4" stroke-opacity=".05"/></pattern>
+    <linearGradient id="print-fade" x1="0" y1="520" x2="0" y2="760" gradientUnits="userSpaceOnUse"><stop stop-color="#060b1400"/><stop offset=".6" stop-color="#060b14" stop-opacity=".76"/><stop offset="1" stop-color="#060b14" stop-opacity=".92"/></linearGradient>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h800v800H0z"/><path fill="url(#grid)" d="M0 0h800v800H0z"/>
+  <circle cx="430" cy="325" r="350" fill="url(#halo)"/>
+  <g stroke="url(#tide)" stroke-linecap="round">
+    <path d="M80 330c100-190 180 140 300-60s240-120 340-40" stroke-width="6"/>
+    <path d="M80 350c100-190 180 140 300-60s240-120 340-40" stroke-width="2" opacity=".6"/>
+    <path d="M80 370c100-190 180 140 300-60s240-120 340-40" stroke-width="2" opacity=".4"/>
+    <path d="M80 390c100-190 180 140 300-60s240-120 340-40" stroke-width="2" opacity=".2"/>
+    <path d="M118 185c0 130 112 50 112 200s235 32 235 130-109 100-109 30 191-70 287-40" stroke-width="3"/>
+    <path d="M210 145v90c0 120 153-40 153 115s218-20 218 70 101 75 101 15V155" stroke-width="2" opacity=".7"/>
+  </g>
+  <g fill="#153036" stroke="#f3d4a3" stroke-width="3"><circle cx="118" cy="185" r="16"/><circle cx="210" cy="145" r="12"/><circle cx="682" cy="155" r="16"/><circle cx="643" cy="505" r="12"/></g>
+  <g fill="#f3d4a3"><circle cx="118" cy="185" r="5"/><circle cx="210" cy="145" r="4"/><circle cx="682" cy="155" r="5"/><circle cx="643" cy="505" r="4"/></g>
+  <path d="M0 520h800v280H0z" fill="url(#print-fade)"/>
+  <circle cx="400" cy="400" r="376" stroke="#f3d4a3" stroke-opacity=".2"/>
+  <g fill="#f3d4a3" font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="400" y="111" font-size="18" letter-spacing="4">PULSE LAB / 002</text>
+    <text x="400" y="641" font-size="48" font-weight="700" letter-spacing="3">TIDAL CIRCUIT</text>
+    <text x="400" y="681" font-size="17" letter-spacing="3">ORIGINAL / 132 BPM</text>
+  </g>
+</svg>

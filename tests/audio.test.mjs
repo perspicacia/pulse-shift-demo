@@ -105,7 +105,7 @@ function feedbackContext() {
     currentTime: 2, sampleRate: 48000, state: 'running', destination: {}, nodes,
     resume: async () => {}, createGain: node, createBufferSource: node,
     createOscillator() { throw new Error('Feedback must not introduce musical pitches'); },
-    createBuffer(channels, frames, sampleRate) { const data = new Float32Array(frames); return { duration: frames / sampleRate, sampleRate, getChannelData: () => data }; },
+    createBuffer(channels, frames, sampleRate) { const data = Array.from({ length: channels }, () => new Float32Array(frames)); return { duration: frames / sampleRate, sampleRate, numberOfChannels: channels, getChannelData: channel => data[channel || 0] }; },
     decodeAudioData: async () => ({ duration: 0.46 }),
   };
 }
@@ -137,6 +137,34 @@ test('lobby loops on its own bus, fades before song startup, and cannot change t
     assert.ok(first.disconnected); assert.equal(audio.lobbyFades.size, 0);
     first.onended(); assert.equal(audio.lobbySource, second);
     audio.stopLobby(); second.onended();
+  } finally { globalThis.window = originalWindow; }
+});
+
+test('selected preview loops separately, reuses its PCM, and yields to game playback without altering its clock', async () => {
+  const originalWindow = globalThis.window, context = feedbackContext();
+  globalThis.window = { AudioContext: class { constructor() { return context; } } };
+  try {
+    const audio = new AudioEngine(); await audio.initContext();
+    const song = context.createBuffer(2, 2000, 100), original = { duration: 80 };
+    audio.buffer = original; audio.originalBuffer = original;
+    audio.startTime = 123; audio.offset = 7;
+    const range = { offset: 4, length: 8 };
+    assert.equal(audio.playPreview(song, range), true);
+    const first = audio.previewSource, loop = first.buffer;
+    assert.equal(first.loop, true); assert.equal(first.loopStart, 0); assert.equal(first.loopEnd, 8);
+    assert.equal(first.started, 2.12); assert.equal(first.target.target, audio.musicBus);
+    assert.equal(audio.source, null); assert.equal(audio.buffer, original); assert.equal(audio.originalBuffer, original);
+    assert.equal(audio.startTime, 123); assert.equal(audio.offset, 7); assert.equal(audio.time(), 0);
+    assert.equal(audio.playLobby({ duration: 30 }), false);
+    audio.stopPreview(); assert.ok(first.stopped && first.disconnected); assert.equal(audio.previewSource, null);
+    audio.playPreview(song, range); const second = audio.previewSource;
+    assert.equal(second.buffer, loop, 'Reopening the menu reuses the same prepared loop');
+    first.onended(); assert.equal(audio.previewSource, second);
+    audio.play({ buffer: original, countdown: 3 });
+    assert.ok(second.stopped && second.disconnected); assert.equal(audio.previewSource, null);
+    assert.equal(audio.source.buffer, original); assert.equal(audio.startTime, 5.12); assert.equal(audio.offset, 0);
+    assert.equal(audio.playPreview(song, range), false, 'Cannot start a menu preview over the game source');
+    audio.stop(); context.state = 'suspended'; assert.equal(audio.playPreview(song, range), false);
   } finally { globalThis.window = originalWindow; }
 });
 
@@ -243,7 +271,7 @@ test('concurrent original songs render once each, keep distinct buffers, and rec
       requests.push(trackId);
       queueMicrotask(() => {
         if (trackId === 'tidal-circuit' && failTidal) { failTidal = false; this.onmessage({ data: { error: 'render failed' } }); return; }
-        const frames = trackId === 'afterglow' ? 100 : 200;
+        const frames = trackId === 'afterglow' ? 100 : trackId === 'astral-veil' ? 300 : 200;
         this.onmessage({ data: { left: new Float32Array(frames), right: new Float32Array(frames), sampleRate: 44100 } });
       });
     }
@@ -252,14 +280,18 @@ test('concurrent original songs render once each, keep distinct buffers, and rec
   globalThis.window = { AudioContext: Context }; globalThis.Worker = Worker;
   try {
     const audio = new AudioEngine();
-    const results = await Promise.allSettled([audio.init('afterglow'), audio.init('tidal-circuit'), audio.init('tidal-circuit')]);
+    const results = await Promise.allSettled([audio.init('afterglow'), audio.init('tidal-circuit'), audio.init('tidal-circuit'), audio.init('astral-veil'), audio.init('astral-veil')]);
     assert.equal(results[0].status, 'fulfilled');
     assert.equal(results[1].status, 'rejected'); assert.equal(results[2].status, 'rejected');
+    assert.equal(results[3].status, 'fulfilled'); assert.equal(results[4].value, results[3].value);
+    const astral = results[3].value;
+    assert.equal(astral.frames, 300);
+    assert.equal(await audio.init('astral-veil'), astral);
     const tidal = await audio.init('tidal-circuit'), afterglow = results[0].value;
     assert.equal(tidal.frames, 200); assert.equal(afterglow.frames, 100);
     assert.equal(await audio.init('tidal-circuit'), tidal);
     assert.equal(await audio.init('afterglow'), afterglow);
     assert.equal(audio.originalBuffer, afterglow);
-    assert.deepEqual(requests, ['afterglow', 'tidal-circuit', 'tidal-circuit']);
+    assert.deepEqual(requests, ['afterglow', 'tidal-circuit', 'astral-veil', 'tidal-circuit']);
   } finally { globalThis.window = originalWindow; globalThis.Worker = originalWorker; }
 });

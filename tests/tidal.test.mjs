@@ -31,9 +31,10 @@ test('new track charts follow authored instrument onsets, have three densities, 
 });
 
 test('original tracks have separate identities, music lengths, charts, and preview positions', () => {
-  assert.equal(BUILTIN_TRACKS.length, 2);
-  assert.equal(new Set(BUILTIN_TRACKS.map(track => track.id)).size, 2);
-  assert.equal(new Set(BUILTIN_TRACKS.map(track => track.buttonId)).size, 2);
+  assert.equal(BUILTIN_TRACKS.length, 3);
+  assert.equal(new Set(BUILTIN_TRACKS.map(track => track.id)).size, 3);
+  assert.equal(new Set(BUILTIN_TRACKS.map(track => track.buttonId)).size, 3);
+  assert.equal(new Set(BUILTIN_TRACKS.map(track => track.cover)).size, 3);
   assert.notEqual(BUILTIN_TRACKS[0].duration, BUILTIN_TRACKS[1].duration);
   for (const track of BUILTIN_TRACKS) {
     assert.ok(track.previewBeat * 60 / track.bpm < track.duration);
