@@ -35,6 +35,7 @@ export class Session {
     this.maxCombo = 0;
     this.earned = 0;
     this.counts = { perfect: 0, great: 0, good: 0, miss: 0 };
+    this.emptyPresses = 0;
     this.offsets = [];
     this.events = [];
     this.expireCursor = 0;
@@ -72,7 +73,18 @@ export class Session {
   hit(lane, time) {
     this.expire(time);
     const note = this.notes.find(item => !item.judged && item.lane === lane && Math.abs(time - item.time) <= (WINDOWS.good + 0.000001) / 1000);
-    if (!note) return null;
+    if (!note) {
+      // Ignore the lead-in and finished chart tail. During the playable chart,
+      // a fresh press without a valid note breaks combo, without inventing a
+      // chart MISS or changing note-weighted score/accuracy.
+      const goodWindow = (WINDOWS.good + 0.000001) / 1000;
+      if (!this.notes.length || time < this.notes[0].time - goodWindow || time > this.notes.at(-1).time + goodWindow || this.processed === this.notes.length) return null;
+      this.combo = 0;
+      this.emptyPresses++;
+      const event = { type: 'empty', lane, delta: null, time, comboMilestone: 0 };
+      this.events.push(event);
+      return event;
+    }
     const delta = (time - note.time) * 1000;
     // Round only floating-point arithmetic noise at inclusive boundaries.
     const type = judge(Math.round(delta * 1e6) / 1e6);
@@ -86,6 +98,7 @@ export class Session {
   }
 
   get processed() { return Object.values(this.counts).reduce((sum, count) => sum + count, 0); }
+  get fullCombo() { return this.notes.length > 0 && this.processed === this.notes.length && this.counts.miss === 0 && this.emptyPresses === 0; }
   get score() { return this.notes.length ? Math.round(this.earned / this.notes.length * 1000000) : 0; }
   get accuracy() { return this.processed ? this.earned / this.processed * 100 : 100; }
   get grade() {

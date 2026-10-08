@@ -41,19 +41,20 @@ test('charts are ordered, deterministic, fit in the music, and never duplicate a
 });
 test('a note can be scored once; an empty-lane press cannot create points', () => {
   const s = new Session(), first = s.notes[0];
-  assert.equal(s.hit((first.lane + 1) % 4, first.time), null);
+  assert.equal(s.hit((first.lane + 1) % 4, first.time).type, 'empty');
   assert.equal(s.score, 0);
   assert.equal(s.hit(first.lane, first.time).type, 'perfect');
   const points = s.score;
-  assert.equal(s.hit(first.lane, first.time), null);
+  assert.equal(s.hit(first.lane, first.time).type, 'empty');
   assert.equal(s.score, points);
-  assert.equal(s.combo, 1);
+  assert.equal(s.combo, 0);
+  assert.equal(s.emptyPresses, 2);
 });
 test('late hit at 140ms is valid, later than that becomes a miss even between frames', () => {
   const s = new Session(), first = s.notes[0];
   assert.equal(s.hit(first.lane, first.time + 0.14)?.type, 'good');
   const other = new Session(), note = other.notes[0];
-  assert.equal(other.hit(note.lane, note.time + 0.141), null);
+  assert.equal(other.hit(note.lane, note.time + 0.141).type, 'empty');
   assert.equal(other.counts.miss, 1);
 });
 test('misses reset combo once and retain maximum combo', () => {
@@ -96,14 +97,14 @@ test('calibration offsets shift the judged song time, with positive values accep
   const calibration = 120;
   assert.equal(s.hit(first.lane, physicalInputTime - calibration / 1000).type, 'perfect');
 });
-test('combo rewards use actual hits at 10 then 50, 100 and 150 without duplicate input rewards', () => {
+test('combo rewards use actual hits at 10 then 50, 100 and 150 without duplicate resolution rewards', () => {
   const chart = Array.from({ length: 152 }, (_, i) => ({ time: i + 1, lane: i % 4 }));
   const session = new Session('normal', chart), rewards = [];
   assert.equal(session.nextComboMilestone, 10);
   chart.forEach((note, i) => {
     const event = session.hit(note.lane, note.time + (i % 3 === 0 ? .1 : i % 3 === 1 ? .07 : 0));
     if (event.comboMilestone) rewards.push(event.comboMilestone);
-    assert.equal(session.hit(note.lane, note.time), null);
+    assert.equal(session.resolve(session.notes[i], event.type, event.delta), null);
   });
   assert.deepEqual(rewards, [10, 50, 100, 150]);
   assert.ok(session.counts.good > 0 && session.counts.great > 0);

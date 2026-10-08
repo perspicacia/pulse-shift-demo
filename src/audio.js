@@ -110,15 +110,19 @@ export class AudioEngine {
     this.pausedContextTime = null;
   }
 
-  outputTime(atPerformanceTime = performance.now()) {
+  outputTime(atPerformanceTime) {
     const stamp = this.context.getOutputTimestamp?.();
+    const now = performance.now();
+    const eventTime = atPerformanceTime ?? now;
     // A suspended context may still report its old output timestamp on resume.
-    const fresh = stamp && performance.now() - stamp.performanceTime < 250;
+    const fresh = stamp && now - stamp.performanceTime < 250;
     if (fresh && stamp.contextTime > 0 && stamp.performanceTime > 0) {
       // Timestamp is the audio sample at the output device, mapped to browser time.
-      return stamp.contextTime + (atPerformanceTime - stamp.performanceTime) / 1000;
+      return stamp.contextTime + (eventTime - stamp.performanceTime) / 1000;
     }
-    return this.context.currentTime - (this.context.outputLatency || this.context.baseLatency || 0);
+    // Preserve the input event's age even when the output timestamp is absent
+    // or stale. Device latency remains an estimate in this fallback path.
+    return this.context.currentTime - (this.context.outputLatency || this.context.baseLatency || 0) + (eventTime - now) / 1000;
   }
 
   time(atPerformanceTime) {

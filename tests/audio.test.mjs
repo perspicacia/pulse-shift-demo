@@ -97,6 +97,16 @@ test('stale output timestamps after a pause cannot jump song time by the paused 
   await audio.resume();
   assert.ok(audio.time() < 7.1);
 });
+
+test('fallback output clocks preserve delayed keyboard and pointer event times', () => {
+  for (const timestamp of [undefined, () => ({contextTime:0,performanceTime:0}), () => ({contextTime:5,performanceTime:performance.now()-1000})]) {
+    const audio=new AudioEngine();audio.source={};audio.startTime=3;
+    audio.context={currentTime:10.05,outputLatency:.03,baseLatency:.005,getOutputTimestamp:timestamp};
+    const now=performance.now(),atEvent=audio.time(now-80),atHandler=audio.time(now);
+    assert.ok(Math.abs(atHandler-atEvent-.08)<.001,'80ms event age is preserved when timestamps are absent, zero, or stale');
+    assert.ok(Math.abs(audio.time()-7.02)<1e-9);
+  }
+});
 function feedbackContext() {
   const nodes = [];
   const param = () => ({ value: 1, changes: [], cancelScheduledValues(time) { this.changes.push(['cancel', time]); }, setTargetAtTime(value, time) { this.value = value; this.changes.push(['target', value, time]); }, setValueAtTime(value, time) { this.changes.push(['set', value, time]); }, exponentialRampToValueAtTime(value, time) { this.changes.push(['exponential', value, time]); }, linearRampToValueAtTime(value, time) { this.changes.push(['linear', value, time]); } });

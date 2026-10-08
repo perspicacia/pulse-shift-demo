@@ -58,11 +58,11 @@ async function click(selector) {
   await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: point.x, y: point.y });
 }
 const keyInfo = { KeyS: ['s', 83], KeyL: ['l', 76], KeyD: ['d', 68], KeyF: ['f', 70], KeyJ: ['j', 74], KeyK: ['k', 75], ArrowLeft: ['ArrowLeft', 37], ArrowRight: ['ArrowRight', 39], Enter: ['Enter', 13], Escape: ['Escape', 27] };
-async function key(code, repeat = false) {
+async function key(code, repeat = false, release = true) {
   const [value, vk] = keyInfo[code];
   const params = { key: value, code, windowsVirtualKeyCode: vk };
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', autoRepeat: repeat, ...params });
-  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', ...params });
+  if (release) await cdp('Input.dispatchKeyEvent', { type: 'keyUp', ...params });
 }
 async function snapshot() {
   return evaluate(`({screen:document.body.dataset.screen,title:document.getElementById('track-title').textContent,elapsed:document.getElementById('play-elapsed').textContent,paused:document.getElementById('pause-dialog').open,score:Number(document.getElementById('live-score').textContent),counts:Object.fromEntries(['perfect','great','good','miss'].map(k=>[k,Number(document.getElementById('count-'+k).textContent)])),combo:Number(document.getElementById('live-max-combo').textContent),preview:document.getElementById('preview-button').getAttribute('aria-pressed'),lobby:document.getElementById('lobby-music').dataset.state,audio:window.__demoAudit.contexts.map(c=>({state:c.state,time:c.currentTime,outputLatency:c.outputLatency})),menuError:document.getElementById('menu-error').hidden?null:document.getElementById('menu-error').textContent,toast:document.getElementById('toast').hidden?null:document.getElementById('toast').textContent})`);
@@ -226,7 +226,17 @@ try {
       inputs += group.notes.length;
     } else {
     await waitForNote(group.time + intentionalOffset);
-    for (const note of group.notes) { await key(['KeyD', 'KeyF', 'KeyJ', 'KeyK'][note.lane]); inputs++; if (inputs === 1) { const before = (await snapshot()).score; await key(['KeyD', 'KeyF', 'KeyJ', 'KeyK'][note.lane]); await key(['KeyD', 'KeyF', 'KeyJ', 'KeyK'][note.lane], true); assert.equal((await snapshot()).score, before, 'Duplicate/repeat input must not add points'); } }
+    for (const note of group.notes) {
+      const code = ['KeyD', 'KeyF', 'KeyJ', 'KeyK'][note.lane], firstInput = inputs === 0;
+      await key(code, false, !firstInput); inputs++;
+      if (firstInput) {
+        const before = (await snapshot()).score;
+        await key(code, false, false); await key(code, true, false);
+        assert.equal((await snapshot()).score, before, 'Held duplicate/repeat input must not add points');
+        const [value, vk] = keyInfo[code];
+        await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: value, code, windowsVirtualKeyCode: vk });
+      }
+    }
     }
     if (!capturedPlay && inputs >= 10) { assert.equal(await comboCount(), 1, 'First 10 combo must play one combo cue'); await check('native inputs, judgments, combo and duplicate protection'); capturedPlay = true; }
     // PNG capture blocks the control process. Use a gap in the authored chart
@@ -245,6 +255,7 @@ try {
   report.tidalInputAudit = await evaluate('({inputs:window.__demoAudit.inputs,judgments:window.__demoAudit.judgments})');
   assert.equal(final.counts.miss, 0, 'Scheduled input missed a note; investigate timing instead of weakening this check');
   assert.equal(final.combo, chart.length); assert.equal(inputs, chart.length);
+  assert.equal(await evaluate(`document.getElementById('clear-status').textContent`), 'FULL COMBO');
   const weight = final.counts.perfect + final.counts.great * 0.7 + final.counts.good * 0.3;
   assert.equal(final.score, Math.round(weight / chart.length * 1000000)); assert.ok(Math.abs(final.accuracy - weight / chart.length * 100) <= 0.0051);
   const expectedGrade = final.accuracy >= 99 ? 'S' : final.accuracy >= 95 ? 'A' : final.accuracy >= 85 ? 'B' : final.accuracy >= 70 ? 'C' : 'D'; assert.equal(final.grade, expectedGrade);
@@ -319,6 +330,7 @@ try {
   await until('document.body.dataset.screen === "result"',12000);
   const sixFinal=await evaluate(`({score:Number(document.getElementById('result-score').textContent.replaceAll(',','')),accuracy:parseFloat(document.getElementById('result-accuracy').textContent),combo:Number(document.getElementById('result-combo').textContent),label:document.getElementById('result-difficulty').textContent,counts:Object.fromEntries(['perfect','great','good','miss'].map(k=>[k,Number(document.getElementById('result-'+k).textContent)]))})`);
   assert.equal(Object.values(sixFinal.counts).reduce((a,b)=>a+b,0),sixChart.length);assert.equal(sixFinal.counts.miss,0);assert.equal(sixFinal.combo,sixChart.length);assert.match(sixFinal.label,/6 KEY.*실험/);
+  assert.equal(await evaluate(`document.getElementById('clear-status').textContent`), 'FULL COMBO');
   const sixWeight=sixFinal.counts.perfect+sixFinal.counts.great*.7+sixFinal.counts.good*.3;
   assert.equal(sixFinal.score,Math.round(sixWeight/sixChart.length*1000000));assert.ok(Math.abs(sixFinal.accuracy-sixWeight/sixChart.length*100)<=.0051);
   assert.ok(await evaluate(`![...document.querySelectorAll('[data-lane]')].some(b=>b.classList.contains('pressed'))`));
