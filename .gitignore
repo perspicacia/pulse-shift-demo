@@ -21,3 +21,6 @@ artifacts/
 private-backups/
 presentation-video/
 presentation-assets/
+
+# Explicitly approved public presentation video.
+!demo-videos/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4

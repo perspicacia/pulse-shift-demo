@@ -1,5 +1,11 @@
 # PULSE SHIFT
 
+## 발표 시연 바로 열기
+
+### [▶ 레벨 2·6키 플레이 영상 보기 / 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4)
+
+[저장소에 포함된 MP4 파일](demo-videos/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4) · 1080p·30fps·약 83초. 실제 브라우저 화면과 음악을 녹화한 **자동 입력 시연**입니다. 243 PERFECT·0 MISS·100만 점·정확도 100%이며, 화면에 자동 플레이 표시가 있습니다. GitHub 파일 미리보기의 용량 제한을 고려해 위 링크는 바로 다운로드되는 릴리스 첨부파일로 연결합니다.
+
 세 오리지널 곡을 연주하는 브라우저 리듬 게임입니다. **PULSE SHIFT** 타이틀 아래에서 LP 턴테이블과 양옆 앨범 커버로 곡을 고르고, 원근 레인으로 다가오는 노트를 D·F·J·K로 입력합니다. 중앙 LP는 앨범 아트로 가득 채우며, 곡을 선택하면 해당 곡의 8마디 미리듣기가 자동으로 반복됩니다. 버전 0.6.0이며 기본 4키와 AFTERGLOW LEVEL 1·ASTRAL VEIL LEVEL 2·3의 6키 실험을 제공합니다.
 
 소스 저장소: [perspicacia/pulse-shift-demo](https://github.com/perspicacia/pulse-shift-demo). [GitHub Pages에서 플레이](https://perspicacia.github.io/pulse-shift-demo/)하거나 아래 명령으로 로컬에서 실행합니다. HTML 자산·홈 링크와 곡 커버는 상대 경로를 사용해 저장소 하위 경로에서도 불러옵니다. 검증 절차와 한계는 [DEMO.md](DEMO.md), 포함 기능은 [CHANGELOG.md](CHANGELOG.md)에 있습니다.
