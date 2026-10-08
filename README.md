@@ -2,6 +2,8 @@
 
 ## 발표 시연 바로 열기
 
+### [📄 발표자료 PDF (9쪽)](presentation/PULSE_SHIFT_PRESENTATION_9P.pdf)
+
 ### [▶ 레벨 2·6키 플레이 영상 보기 / 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4)
 
 [저장소에 포함된 MP4 파일](demo-videos/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4) · 1080p·30fps·약 83초. 실제 브라우저 화면과 음악을 녹화한 **자동 입력 시연**입니다. 243 PERFECT·0 MISS·100만 점·정확도 100%이며, 화면에 자동 플레이 표시가 있습니다. GitHub 파일 미리보기의 용량 제한을 고려해 위 링크는 바로 다운로드되는 릴리스 첨부파일로 연결합니다.
