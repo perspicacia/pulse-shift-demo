@@ -93,7 +93,7 @@ async function waitForNote(time) {
 async function schedulePageInputs(plan) {
   await evaluate(`(() => {
     const plan = ${JSON.stringify(plan)}; let index = 0;
-    window.__demoAudit.scheduledInputs = 0;
+    window.__demoAudit.scheduledInputs = 0; const releases = [];
     function tick() {
       const c = window.__demoAudit.contexts[0];
       const source = window.__demoAudit.sources.findLast(s => s.buffer?.duration > 60 && s.auditStart && !s.auditStop);
@@ -103,15 +103,21 @@ async function schedulePageInputs(plan) {
         const output = stamp.contextTime > 0 && stamp.performanceTime > 0 && now - stamp.performanceTime < 250 ? stamp.contextTime + (now - stamp.performanceTime) / 1000 : c.currentTime - (c.outputLatency || c.baseLatency || 0);
         const time = output - source.auditStart[0] + (source.auditStart[1] || 0);
         while (index < plan.length && time >= plan[index].time) {
-          for (const code of plan[index++].codes) {
+          const step = plan[index++];
+          for (const [i, code] of step.codes.entries()) {
             const key = code.slice(3).toLowerCase();
             window.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true }));
-            window.dispatchEvent(new KeyboardEvent('keyup', { key, code, bubbles: true, cancelable: true }));
+            if (step.endTimes?.[i] !== undefined) releases.push({code,time:step.endTimes[i]+.005});
+            else window.dispatchEvent(new KeyboardEvent('keyup', { key, code, bubbles: true, cancelable: true }));
             window.__demoAudit.scheduledInputs++;
           }
         }
+        for (let i = releases.length - 1; i >= 0; i--) if (time >= releases[i].time) {
+          const {code} = releases.splice(i,1)[0];
+          window.dispatchEvent(new KeyboardEvent('keyup',{key:code.slice(3).toLowerCase(),code,bubbles:true,cancelable:true}));
+        }
       }
-      if (index < plan.length) setTimeout(tick, 4);
+      if (index < plan.length || releases.length) setTimeout(tick, 4);
     }
     tick();
   })()`);
@@ -375,7 +381,7 @@ try {
   assert.equal(await evaluate('document.body.dataset.keyCount'), '6');
   assert.ok(await evaluate(`document.querySelector('[data-difficulty="easy"]').disabled&&!document.querySelector('[data-difficulty="normal"]').disabled&&!document.querySelector('[data-difficulty="hard"]').disabled`));
   await click('[data-difficulty="normal"]');
-  assert.equal(await evaluate('document.getElementById("note-count").textContent'), '243 NOTES');
+  assert.equal(await evaluate('document.getElementById("note-count").textContent'), '243 NOTES · 8 HOLD');
   assert.match(await evaluate('document.getElementById("mode-hint").textContent'), /ASTRAL VEIL LEVEL 2/);
   await screenshot('12-astral-six-key-level2-select');
   await navigate();

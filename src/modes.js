@@ -33,7 +33,7 @@ export function sixKeyDifficulties(trackId) {
   return trackId === 'afterglow' ? ['easy'] : trackId === 'astral-veil' ? ['normal', 'hard'] : [];
 }
 
-// LEVEL 2 keeps the four-key chart's authored timing, density and two-note cap.
+// LEVEL 2 keeps the four-key chart's authored head timing, density and two-note cap.
 // Alternate hands across six lanes; two-note accents use one key in each hand.
 export function createAstralSixKeyNormalChart() {
   const pattern = [0, 3, 1, 4, 2, 5, 1, 4, 0, 3, 2, 5];
@@ -44,6 +44,15 @@ export function createAstralSixKeyNormalChart() {
     const lane = chord ? (notes.at(-1).lane + 3) % 6 : pattern[group++ % pattern.length];
     notes.push({ time: note.time, lane });
     previous = note.time;
+  }
+  // Eight four-bar pad entrances become short one/two-beat holds. Keep every
+  // original head/lane and leave >140ms before the next same-lane head window.
+  const padTimes = new Set(createAstralScore().filter(event => event.voice === 'pad' && event.beat >= 8 && event.beat < 132).map(event => event.time));
+  for (const [index, note] of notes.entries()) {
+    if (!padTimes.has(note.time)) continue;
+    const next = notes.slice(index + 1).find(item => item.lane === note.lane);
+    const length = !next || next.time - note.time >= 2 * ASTRAL_BEAT + .2 ? 2 : 1;
+    note.endTime = note.time + length * ASTRAL_BEAT;
   }
   return notes;
 }
@@ -85,5 +94,6 @@ export function chartFor(track, keyCount, difficulty) {
 }
 
 export function modeRecordKey(trackId, difficulty, keyCount) {
-  return `${trackId}:${keyCount}k:${difficulty}`;
+  const revision = trackId === 'astral-veil' && keyCount === 6 && difficulty === 'normal' ? ':hold-v1' : '';
+  return `${trackId}:${keyCount}k:${difficulty}${revision}`;
 }
