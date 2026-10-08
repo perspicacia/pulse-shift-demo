@@ -37,6 +37,28 @@ Chrome에서 `http://localhost:4173`을 엽니다. 소리는 첫 클릭이나 �
 
 HTML · CSS · JavaScript · Canvas · Web Audio API · Web Workers — 로컬 서버는 Node.js.
 
+## 프로젝트 구조
+
+주요 파일과 폴더만 정리했습니다.
+
+```text
+pulse-shift-demo/       # 프로젝트 루트
+├── index.html         # 게임 화면 진입점
+├── styles.css         # 기본 화면 스타일
+├── server.mjs         # 로컬 개발 서버
+├── package.json       # 실행·검증 명령
+├── src/               # 게임 로직
+│   ├── app.js         # 화면 전환·키 입력
+│   ├── game.js        # 채보·판정·점수
+│   └── audio.js       # 음악·효과음·재생 시계
+├── assets/            # 앨범 아트·배경·대기 음원
+├── scripts/           # 음원 생성·브라우저 검증
+├── tests/             # 게임 로직 단위 검사
+├── docs/              # 상세 기능·구조 설명
+├── presentation/      # 발표자료 PDF
+└── demo-videos/       # 자동 입력 시연 영상
+```
+
 ## 자세히 보기
 
 [기능·구조 상세](docs/FEATURES.md) · [실행·검증·발표 안내](DEMO.md) · [변경 기록](CHANGELOG.md)
