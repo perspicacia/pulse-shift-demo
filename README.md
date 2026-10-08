@@ -1,6 +1,6 @@
 # PULSE SHIFT
 
-**[게임 사이트 바로가기](https://perspicacia.github.io/pulse-shift-demo/) · [발표자료 PDF 바로가기](presentation/PULSE_SHIFT_프로젝트_발표자료.pdf)**
+**[게임 사이트 바로가기](https://perspicacia.github.io/pulse-shift-demo/) · [프로젝트 발표 자료](presentation/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%EB%B0%9C%ED%91%9C%20%EC%9E%90%EB%A3%8C.pdf)**
 
 [▶ 레벨 2·6키 플레이 영상 보기 / 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4) — 실제 브라우저 화면과 음악을 녹화한 **자동 입력 시연**입니다.
 
