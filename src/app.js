@@ -12,7 +12,7 @@ const audio = new AudioEngine();
 const effects = new HitEffects();
 const popAnimations = new Map();
 let activeTrack = BUILTIN_TRACKS[0];
-const colors = { perfect: '#d5ff56', great: '#83e8f0', good: '#ffc984', miss: '#ff888f' };
+const colors = { perfect: '#d5ff56', great: '#83e8f0', good: '#ffc984', miss: '#ff888f', empty: '#ff888f' };
 const laneColors = ['#d5ff56', '#83e8f0', '#83e8f0', '#d5ff56'];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
@@ -396,7 +396,7 @@ function finish() {
   $('result-combo').textContent = session.maxCombo;
   for (const [type, count] of Object.entries(session.counts)) $(`result-${type}`).textContent = count;
   $('new-record').hidden = !newBest || session.score === 0;
-  $('clear-status').textContent = session.counts.miss === 0 ? 'FULL COMBO' : 'TRACK FINISHED';
+  $('clear-status').textContent = session.fullCombo ? 'FULL COMBO' : `TRACK FINISHED${session.emptyPresses ? ` · EMPTY ${session.emptyPresses}` : ''}`;
   $('result-message').textContent = { S: '완벽에 가까운 비트.', A: '리듬을 제대로 탔어요.', B: '좋은 리듬이었어요.', C: '조금씩 비트가 맞아가요.', D: '다음 비트는 더 가까이.' }[session.grade];
   screen('result');
   $('retry-button').focus({ preventScroll: true });
@@ -455,7 +455,7 @@ function feedback(event, now = performance.now()) {
   $('combo-label').textContent = session.combo > 0 ? session.combo : '';
   $('combo-caption').textContent = session.combo > 0 ? 'COMBO' : '';
   if (session.combo > 0) pop('combo-label', 1.12, 140);
-  $('timing-label').textContent = event.delta === null ? '' : Math.abs(event.delta) < 10 ? 'ON THE BEAT' : `${event.delta < 0 ? 'EARLY' : 'LATE'} ${Math.abs(Math.round(event.delta))} ms`;
+  $('timing-label').textContent = event.type === 'empty' ? '노트 없는 입력 · 콤보 끊김' : event.delta === null ? '' : Math.abs(event.delta) < 10 ? 'ON THE BEAT' : `${event.delta < 0 ? 'EARLY' : 'LATE'} ${Math.abs(Math.round(event.delta))} ms`;
   if (event.delta !== null) {
     $('timing-marker').style.left = `${clamp(50 + event.delta / 2.8, 0, 100, 50)}%`;
     laneFlashes[event.lane] = now;
@@ -473,8 +473,11 @@ function press(lane, token, timestamp = performance.now()) {
   // Positive calibration delays both the visible hit line crossing and judgment.
   const time = audio.time(timestamp) - settings.offset / 1000;
   if (time < 0) return;
+  // A press can run between animation frames. Deliver its expired-note feedback
+  // before hit() consumes the expiration events internally.
+  const misses = session.expire(time);
+  if (misses.length) feedback(misses.at(-1));
   const event = session.hit(lane, time);
-  // hit() can also expire earlier notes between animation frames.
   updateLive();
   if (event) feedback(event);
 }

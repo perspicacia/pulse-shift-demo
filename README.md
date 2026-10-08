@@ -33,6 +33,8 @@ Chrome에서 `http://localhost:4173`을 엽니다. 소리는 첫 클릭이나 �
 | 일시정지 / 재개 | Esc / Enter 또는 화면 버튼 |
 | 터치 입력 | 화면 아래 레인 버튼 |
 
+플레이 구간에서 유효한 노트가 없는 키를 새로 누르면 **EMPTY**가 표시되고 콤보가 끊깁니다. 점수·정확도는 노트 판정만으로 계산하며, 오입력이 있으면 **FULL COMBO**로 표시하지 않습니다. 첫 노트 판정 구간 전·채보 완료 후 입력과 키 유지에 따른 자동 반복은 제외합니다.
+
 ## 사용 기술
 
 HTML · CSS · JavaScript · Canvas · Web Audio API · Web Workers — 로컬 서버는 Node.js.

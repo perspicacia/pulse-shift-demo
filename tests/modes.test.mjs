@@ -88,7 +88,7 @@ test('Astral six-key normal uses ordinary judgment, independent records and clea
   for (const note of chart) {
     assert.equal(session.hit(note.lane, note.time)?.type, 'perfect');
     const score = session.score;
-    assert.equal(session.hit(note.lane, note.time), null);
+    assert.equal(session.resolve(session.notes.find(n => n.lane === note.lane && n.time === note.time), 'perfect', 0), null);
     assert.equal(session.score, score);
   }
   session.expire(ASTRAL_DURATION + 1);
@@ -105,7 +105,7 @@ test('Astral six-key hard perfect demo resolves every note with the normal score
   const chart = createAstralSixKeyChart(), session = new Session('hard', chart);
   for (const note of chart) {
     assert.equal(session.hit(note.lane, note.time)?.type, 'perfect');
-    assert.equal(session.hit(note.lane, note.time), null);
+    assert.equal(session.resolve(session.notes.find(n => n.lane === note.lane && n.time === note.time), 'perfect', 0), null);
   }
   session.expire(ASTRAL_DURATION + 1);
   assert.deepEqual(session.counts, { perfect: chart.length, great: 0, good: 0, miss: 0 });
@@ -114,16 +114,18 @@ test('Astral six-key hard perfect demo resolves every note with the normal score
   assert.notEqual(modeRecordKey('astral-veil', 'hard', 6), modeRecordKey('astral-veil', 'hard', 4));
 });
 
-test('six-key perfect play scores exactly one million, duplicate input cannot score, retry starts clean', () => {
+test('six-key perfect play scores exactly one million, duplicate resolution cannot score, retry starts clean', () => {
   const chart = createSixKeyChart(), session = new Session('easy', chart);
   for (const note of chart) {
     assert.equal(session.hit(note.lane, note.time)?.type, 'perfect');
     const score = session.score;
-    assert.equal(session.hit(note.lane, note.time), null); assert.equal(session.score, score);
+    assert.equal(session.resolve(session.notes.find(n => n.lane === note.lane && n.time === note.time), 'perfect', 0), null);
+    assert.equal(session.score, score);
   }
   session.expire(DURATION + 1);
   assert.equal(session.score, 1000000); assert.equal(session.accuracy, 100); assert.equal(session.grade, 'S');
   assert.equal(session.maxCombo, chart.length); assert.equal(session.counts.miss, 0);
+  assert.equal(session.fullCombo, true);
   const retry = new Session('easy', chart); assert.equal(retry.score, 0); assert.equal(retry.processed, 0);
 });
 
