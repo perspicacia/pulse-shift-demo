@@ -1,8 +1,8 @@
 # PULSE SHIFT
 
-## 발표 시연 바로 열기
+**[게임 사이트 바로가기](https://perspicacia.github.io/pulse-shift-demo/) · [발표자료](presentation/PULSE_SHIFT_PRESENTATION_9P.pdf)**
 
-### [📄 발표자료 PDF (9쪽)](presentation/PULSE_SHIFT_PRESENTATION_9P.pdf)
+## 발표 시연 바로 열기
 
 ### [▶ 레벨 2·6키 플레이 영상 보기 / 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4)
 
