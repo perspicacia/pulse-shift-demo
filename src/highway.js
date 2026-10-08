@@ -13,6 +13,11 @@ export function projectHighway(road, progress) {
   return { y: road.top + (road.hitY - road.top) * depth, width, left: (road.width - width) / 2 };
 }
 
+export function projectHold(road, note, time, travel) {
+  const project = at => projectHighway(road, 1 - (at - time) / travel);
+  return { head: project(note.holding ? Math.max(note.time, time) : note.time), tail: project(note.endTime) };
+}
+
 function polygon(ctx, points) {
   ctx.beginPath();
   points.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
@@ -67,13 +72,30 @@ export function drawHighway(ctx, options) {
   for (let i = end - 1; i >= firstNote; i--) {
     const note = notes[i];
     if (note.judged) continue;
-    const point = projectedTime(note.time);
+    const hold = note.endTime === undefined ? null : projectHold(road, note, time, travel);
+    const point = hold?.head ?? projectedTime(note.time);
     if (point.y > road.hitY + 14) continue;
     const scale = point.width / road.bottomWidth;
     const gap = Math.max(1.5, 5 * scale);
     const x = laneEdge(point, note.lane) + gap, noteWidth = point.width / laneCount - gap * 2;
     const thickness = Math.max(3, 10 * scale);
     ctx.save();
+    if (hold) {
+      const active = note.holding && !note.suspended;
+      const tail = hold.tail, tailGap = Math.max(1.5, 5 * tail.width / road.bottomWidth);
+      const tx = laneEdge(tail, note.lane) + tailGap, tw = tail.width / laneCount - 2 * tailGap;
+      polygon(ctx, [[tx, tail.y], [tx + tw, tail.y], [x + noteWidth, point.y], [x, point.y]]);
+      ctx.fillStyle = `${noteColors[note.lane]}${active ? 'b8' : '66'}`; ctx.fill();
+      ctx.strokeStyle = active ? '#e8fbff' : noteColors[note.lane]; ctx.lineWidth = active ? 2 : 1; ctx.stroke();
+      // A center spine and an outlined tail distinguish holds by shape too.
+      ctx.strokeStyle = '#e8fbffcc'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(tx + tw / 2, tail.y); ctx.lineTo(x + noteWidth / 2, point.y); ctx.stroke();
+      if (note.endTime <= time + travel) {
+        const tailHeight = Math.max(4, 9 * tail.width / road.bottomWidth);
+        ctx.fillStyle = '#101326'; ctx.fillRect(tx, tail.y - tailHeight / 2, tw, tailHeight);
+        ctx.strokeStyle = '#e8fbff'; ctx.lineWidth = 1.5; ctx.strokeRect(tx, tail.y - tailHeight / 2, tw, tailHeight);
+      }
+    }
     ctx.shadowColor = noteColors[note.lane]; ctx.shadowBlur = reduced || intensity <= 0 ? 0 : 12 * scale * intensity;
     ctx.fillStyle = noteColors[note.lane]; ctx.beginPath();
     ctx.roundRect(x, point.y - thickness / 2, noteWidth, thickness, Math.min(3, thickness / 2)); ctx.fill();

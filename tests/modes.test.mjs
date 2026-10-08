@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import {playChart} from '../scripts/qa-input-plan.mjs';
 import { Session, DURATION } from '../src/game.js';
 import { BUILTIN_TRACKS } from '../src/tracks.js';
 import { chartFor, createSixKeyChart, createAstralSixKeyChart, createAstralSixKeyNormalChart, keysFor, modeRecordKey, sixKeyDifficulty, sixKeyDifficulties } from '../src/modes.js';
@@ -85,12 +86,10 @@ test('Astral six-key normal retains LEVEL 2 rhythm and density with two-hand acc
 
 test('Astral six-key normal uses ordinary judgment, independent records and clean retry', () => {
   const chart = createAstralSixKeyNormalChart(), session = new Session('normal', chart);
-  for (const note of chart) {
-    assert.equal(session.hit(note.lane, note.time)?.type, 'perfect');
-    const score = session.score;
-    assert.equal(session.resolve(session.notes.find(n => n.lane === note.lane && n.time === note.time), 'perfect', 0), null);
-    assert.equal(session.score, score);
-  }
+  playChart(session, chart);
+  const score = session.score;
+  for (const note of session.notes) assert.equal(session.resolve(note, 'perfect', 0), null);
+  assert.equal(session.score, score);
   session.expire(ASTRAL_DURATION + 1);
   assert.deepEqual(session.counts, { perfect: 243, great: 0, good: 0, miss: 0 });
   assert.equal(session.score, 1000000); assert.equal(session.accuracy, 100);

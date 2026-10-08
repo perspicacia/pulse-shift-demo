@@ -2,7 +2,7 @@
 
 **[게임 사이트 바로가기](https://perspicacia.github.io/pulse-shift-demo/) · [프로젝트 발표 자료](presentation/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%EB%B0%9C%ED%91%9C%20%EC%9E%90%EB%A3%8C.pdf)**
 
-[▶ 레벨 2·6키 플레이 영상 보기 / 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4) — 실제 브라우저 화면과 음악을 녹화한 **자동 입력 시연**입니다.
+[▶ 레벨 2·6키 플레이 영상 보기 / 다운로드](https://github.com/perspicacia/pulse-shift-demo/releases/download/demo-astral-6k-2026-10-07/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4) — 실제 브라우저 화면과 음악을 녹화한 **롱노트 추가 전 자동 입력 시연**입니다.
 
 노트가 판정선에 닿는 순간 해당 키를 눌러 음악을 연주하는 브라우저 리듬 게임입니다. 오리지널 음악과 LP 턴테이블 형태의 곡 선택 화면을 제공합니다.
 
@@ -34,6 +34,8 @@ Chrome에서 `http://localhost:4173`을 엽니다. 소리는 첫 클릭이나 �
 | 터치 입력 | 화면 아래 레인 버튼 |
 
 플레이 구간에서 유효한 노트가 없는 키를 새로 누르면 **EMPTY**가 표시되고 콤보가 끊깁니다. 점수·정확도는 노트 판정만으로 계산하며, 오입력이 있으면 **FULL COMBO**로 표시하지 않습니다. 첫 노트 판정 구간 전·채보 완료 후 입력과 키 유지에 따른 자동 반복은 제외합니다.
+
+**ASTRAL VEIL LEVEL 2·6키**에는 롱노트 8개가 있습니다. 머리가 판정선에 닿을 때 눌러 끝까지 유지하며, 중간에 놓으면 MISS입니다. 홀드 중 일시정지했다면 해당 키를 다시 누른 채 재개하세요. [상세 판정·복귀 규칙과 검사](docs/HOLD_NOTES.md)
 
 ## 사용 기술
 

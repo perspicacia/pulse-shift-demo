@@ -142,3 +142,9 @@ body[data-screen="game"] .footer { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .countdown, .stage-feedback > strong { text-shadow: none; }
 }
+
+/* Held notes stay readable without adding motion. */
+.lane-controls button.holding { border-color: #e8fbff; box-shadow: inset 0 0 0 2px #e8fbff; }
+.hold-recovery-keys { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+.hold-recovery-keys button { min-width: 52px; min-height: 48px; justify-content: center; }
+.hold-recovery-keys button.pressed { background: #83e8f0; color: #101326; }

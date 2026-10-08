@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Session, WINDOWS } from '../src/game.js';
 import { BUILTIN_TRACKS } from '../src/tracks.js';
+import {playChart} from '../scripts/qa-input-plan.mjs';
 import { chartFor, sixKeyDifficulties } from '../src/modes.js';
 
 test('empty presses break combo without changing chart counts, points or accuracy', () => {
@@ -56,14 +57,14 @@ test('empty presses cannot repeat a rewarded combo milestone and retry clears th
 for(const track of BUILTIN_TRACKS)for(const keys of [4,6])for(const difficulty of keys===4?['easy','normal','hard']:sixKeyDifficulties(track.id)) {
   test(`${track.id} ${keys}k ${difficulty}: perfect inputs are unchanged; all-lane spam cannot full-combo`,()=>{
     const chart=chartFor(track,keys,difficulty),perfect=new Session(difficulty,chart);
-    for(const note of chart)assert.equal(perfect.hit(note.lane,note.time).type,'perfect');
+    playChart(perfect,chart);
     assert.equal(perfect.score,1000000);assert.equal(perfect.accuracy,100);assert.equal(perfect.combo,chart.length);assert.equal(perfect.fullCombo,true);
     for(const phase of [0,.05,.1,.15]){
       const spam=new Session(difficulty,chart);
-      for(let i=0;i*.2+phase<=track.duration;i++)for(let lane=0;lane<keys;lane++)spam.hit(lane,i*.2+phase);
+      for(let i=0;i*.2+phase<=track.duration;i++)for(let lane=0;lane<keys;lane++){const t=i*.2+phase;spam.hit(lane,t);spam.release(lane,t+.001)}
       spam.expire(track.duration+1);
       assert.ok(spam.emptyPresses>0);assert.ok(spam.maxCombo<chart.length);assert.equal(spam.fullCombo,false);
-      assert.equal(spam.processed,chart.length);assert.equal(spam.counts.miss,0);
+      assert.equal(spam.processed,chart.length);assert.equal(spam.counts.miss,chart.filter(n=>n.endTime).length);
       // Combo-only policy preserves the previous note-weighted score formula.
       assert.equal(spam.score,Math.round((spam.counts.perfect+spam.counts.great*.7+spam.counts.good*.3)/chart.length*1000000));
     }

@@ -12,7 +12,7 @@ const audio = new AudioEngine();
 const effects = new HitEffects();
 const popAnimations = new Map();
 let activeTrack = BUILTIN_TRACKS[0];
-const colors = { perfect: '#d5ff56', great: '#83e8f0', good: '#ffc984', miss: '#ff888f', empty: '#ff888f' };
+const colors = { perfect: '#d5ff56', great: '#83e8f0', good: '#ffc984', miss: '#ff888f', empty: '#ff888f', hold: '#83e8f0' };
 const laneColors = ['#d5ff56', '#83e8f0', '#83e8f0', '#d5ff56'];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
@@ -218,7 +218,7 @@ function updateModeUI() {
   $('settings-key-count').textContent = `${settings.keyCount} KEY LAYOUT`;
   document.title = `PULSE SHIFT · ${settings.keyCount} KEY RHYTHM${six ? ' · 실험' : ''}`;
   $('mode-hint').textContent = six
-    ? `6키 실험 · ${activeTrack.title} ${DIFFICULTIES[settings.difficulty].label} · S D F / J K L`
+    ? `6키 실험 · ${activeTrack.title} ${DIFFICULTIES[settings.difficulty].label} · S D F / J K L${activeTrack.id === 'astral-veil' && settings.difficulty === 'normal' ? ' · 롱노트 포함' : ''}`
     : '6키 실험: AFTERGLOW LEVEL 1 / ASTRAL VEIL LEVEL 2·3';
   const labels = keys.map(key => key.slice(3));
   $('game-canvas').setAttribute('aria-label', `${settings.keyCount}개 레인, ${labels.join(' ')} 키로 플레이하세요.`);
@@ -272,7 +272,8 @@ function updateSettings(persist = true) {
   audio.setComboVolume(settings.comboVolume);
   audio.setLobbyVolume(settings.lobbyVolume);
   syncMenuMusic();
-  $('note-count').textContent = `${activeChart().length} NOTES`;
+  const chart = activeChart(), holds = chart.filter(note => note.endTime !== undefined).length;
+  $('note-count').textContent = `${chart.length} NOTES${holds ? ` · ${holds} HOLD` : ''}`;
   for (const button of document.querySelectorAll('[data-difficulty]')) button.setAttribute('aria-pressed', button.dataset.difficulty === settings.difficulty);
   updateBest();
   if (persist) write('pulse-shift-settings', settings);
@@ -286,7 +287,9 @@ function preview() {
 
 function clearHeld() {
   held.clear();
-  laneButtons.forEach(button => button.classList.remove('pressed'));
+  session?.suspendHolds();
+  laneButtons.forEach(button => { button.classList.remove('pressed'); button.setAttribute('aria-pressed', 'false'); });
+  if (state === 'paused') updateHoldRecovery();
 }
 
 async function start() {
@@ -334,26 +337,42 @@ async function start() {
 
 async function pause() {
   if (state !== 'playing') return;
+  for (const event of session.expire(audio.time() - settings.offset / 1000)) feedback(event);
   state = 'pausing';
+  session.suspendHolds();
   clearHeld();
   try {
     await audio.pause();
     state = 'paused';
     $('pause-error').hidden = true;
+    setupHoldRecovery();
     $('pause-dialog').showModal();
     $('resume-button').focus();
   } catch {
     state = 'playing';
+    for (const note of [...session.activeHolds.values()]) feedback(session.resolve(note, 'miss'));
     toast('일시정지하지 못했어요. 다시 시도해주세요.');
   }
 }
 
 async function resume() {
   if (state !== 'paused') return;
+  if (session.pendingHoldLanes.length) {
+    updateHoldRecovery();
+    $('hold-recovery-status').focus({ preventScroll: true });
+    return;
+  }
   state = 'resuming';
   $('resume-button').disabled = true;
   try {
     await audio.resume();
+    // A release can arrive while AudioContext.resume() is pending.
+    if (session.pendingHoldLanes.length) {
+      await audio.pause();
+      state = 'paused';
+      updateHoldRecovery();
+      return;
+    }
     state = 'playing';
     $('pause-dialog').close();
     $('pause-button').focus({ preventScroll: true });
@@ -378,7 +397,7 @@ function menu() {
 
 function finish() {
   if (state !== 'playing') return;
-  session.expire(activeTrack.duration + 1);
+  session.finish(activeTrack.duration + 1);
   state = 'result';
   audio.stop();
   clearHeld();
@@ -407,6 +426,11 @@ function updateLive() {
   $('live-score').textContent = String(session.score).padStart(7, '0');
   $('live-accuracy').innerHTML = `${session.accuracy.toFixed(2)}<small>%</small>`;
   $('live-max-combo').textContent = session.maxCombo;
+  laneButtons.forEach((button, lane) => {
+    const holding = session.activeHolds.has(lane);
+    button.classList.toggle('holding', holding);
+    button.setAttribute('aria-pressed', String(button.classList.contains('pressed')));
+  });
   for (const [type, count] of Object.entries(session.counts)) $(`count-${type}`).textContent = count;
   const target = session.nextComboMilestone;
   const charge = target ? Math.min(session.combo / target, 1) : 1;
@@ -455,19 +479,28 @@ function feedback(event, now = performance.now()) {
   $('combo-label').textContent = session.combo > 0 ? session.combo : '';
   $('combo-caption').textContent = session.combo > 0 ? 'COMBO' : '';
   if (session.combo > 0) pop('combo-label', 1.12, 140);
-  $('timing-label').textContent = event.type === 'empty' ? '노트 없는 입력 · 콤보 끊김' : event.delta === null ? '' : Math.abs(event.delta) < 10 ? 'ON THE BEAT' : `${event.delta < 0 ? 'EARLY' : 'LATE'} ${Math.abs(Math.round(event.delta))} ms`;
+  $('timing-label').textContent = event.type === 'hold' ? '끝까지 누르고 있어요' : event.holdComplete ? 'HOLD COMPLETE' : event.type === 'empty' ? '노트 없는 입력 · 콤보 끊김' : event.delta === null ? '' : Math.abs(event.delta) < 10 ? 'ON THE BEAT' : `${event.delta < 0 ? 'EARLY' : 'LATE'} ${Math.abs(Math.round(event.delta))} ms`;
   if (event.delta !== null) {
     $('timing-marker').style.left = `${clamp(50 + event.delta / 2.8, 0, 100, 50)}%`;
     laneFlashes[event.lane] = now;
-    effects.hit(event.lane, event.type, now, settings.effectIntensity, reducedMotion.matches, settings.keyCount);
-    audio.hit(event.lane, event.type);
+    const type = event.headType || event.type;
+    effects.hit(event.lane, type, now, settings.effectIntensity, reducedMotion.matches, settings.keyCount);
+    if (!event.holdComplete) audio.hit(event.lane, type);
   }
   if (event.comboMilestone) celebrate(event, now);
   updateLive();
 }
 
 function press(lane, token, timestamp = performance.now()) {
-  if (state !== 'playing' || held.has(token)) return;
+  if (held.has(token)) return;
+  if (state === 'paused' && session.activeHolds.has(lane)) {
+    held.add(token);
+    laneButtons[lane].classList.add('pressed');
+    session.recoverHold(lane);
+    updateHoldRecovery();
+    return;
+  }
+  if (state !== 'playing') return;
   held.add(token);
   laneButtons[lane].classList.add('pressed');
   // Positive calibration delays both the visible hit line crossing and judgment.
@@ -475,17 +508,51 @@ function press(lane, token, timestamp = performance.now()) {
   if (time < 0) return;
   // A press can run between animation frames. Deliver its expired-note feedback
   // before hit() consumes the expiration events internally.
-  const misses = session.expire(time);
-  if (misses.length) feedback(misses.at(-1));
+  for (const event of session.expire(time)) feedback(event);
   const event = session.hit(lane, time);
   updateLive();
   if (event) feedback(event);
 }
 
-function release(lane, token) {
+function release(lane, token, timestamp = performance.now()) {
+  if (!held.has(token)) return;
   held.delete(token);
-  const stillHeld = [...held].some(value => value === inputKeys()[lane] || value.startsWith(`pointer-${lane}-`));
-  if (!stillHeld) laneButtons[lane].classList.remove('pressed');
+  const stillHeld = [...held].some(value => value === inputKeys()[lane] || value.startsWith(`pointer-${lane}-`) || value.startsWith(`recovery-${lane}-`) || value === `accessible-${lane}`);
+  if (stillHeld) return;
+  laneButtons[lane].classList.remove('pressed');
+  if (state === 'paused' || state === 'resuming') {
+    session.recoverHold(lane, false);
+    updateHoldRecovery();
+  } else if (state === 'playing') {
+    const time = audio.time(timestamp) - settings.offset / 1000;
+    for (const event of session.expire(time)) feedback(event);
+    feedback(session.release(lane, time));
+    updateLive();
+  }
+}
+
+function setupHoldRecovery() {
+  const controls = $('hold-recovery-keys');
+  controls.replaceChildren(...[...session.activeHolds.keys()].map(lane => {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'secondary-button'; button.dataset.holdLane = lane;
+    button.textContent = inputKeys()[lane].slice(3);
+    button.setAttribute('aria-label', `${button.textContent} 롱노트 다시 누르기`);
+    bindLaneControl(button, lane);
+    return button;
+  }));
+  $('hold-recovery').hidden = !session.activeHolds.size;
+  updateHoldRecovery();
+}
+
+function updateHoldRecovery() {
+  const pending = session.pendingHoldLanes.map(lane => inputKeys()[lane].slice(3));
+  $('hold-recovery-status').textContent = pending.length ? `${pending.join(' · ')} 키를 다시 누른 채 재개하세요. 음악은 기다리고 있어요.` : '준비됐어요. 키를 유지한 채 재개하세요.';
+  for (const button of $('hold-recovery-keys').children) {
+    const down = !session.pendingHoldLanes.includes(Number(button.dataset.holdLane));
+    button.classList.toggle('pressed', down); button.setAttribute('aria-pressed', String(down));
+  }
+  updateLive();
 }
 
 function resizeCanvas() {
@@ -501,7 +568,7 @@ new ResizeObserver(resizeCanvas).observe(canvas);
 
 function draw(time, now) {
   if (!canvasWidth || !canvasHeight) return;
-  while (lastNoteIndex < session.notes.length && session.notes[lastNoteIndex].time < time - 0.2) lastNoteIndex++;
+  while (lastNoteIndex < session.notes.length && (session.notes[lastNoteIndex].judged || (session.notes[lastNoteIndex].endTime ?? session.notes[lastNoteIndex].time) < time - 0.2)) lastNoteIndex++;
   drawHighway(ctx, {
     width: canvasWidth, height: canvasHeight, time, now,
     speed: settings.speed, bpm: activeTrack.bpm, beatOffset: activeTrack.beatOffset,
@@ -518,8 +585,7 @@ function frame(now) {
   const songTime = audio.time();
   const time = songTime - settings.offset / 1000;
   if (state === 'playing') {
-    const misses = session.expire(time);
-    if (misses.length) feedback(misses.at(-1), now);
+    for (const event of session.expire(time)) feedback(event, now);
     if (songTime >= activeTrack.duration + Math.max(0, settings.offset / 1000)) { finish(); return; }
   }
   draw(time, now);
@@ -621,7 +687,7 @@ window.addEventListener('keydown', event => {
     event.preventDefault(); start(); return;
   }
   const lane = inputKeys().indexOf(event.code);
-  if (lane >= 0 && state === 'playing') {
+  if (lane >= 0 && (state === 'playing' || state === 'paused' && session.activeHolds.has(lane))) {
     event.preventDefault();
     const timestamp = Math.abs(event.timeStamp - performance.now()) < 1000 ? event.timeStamp : performance.now();
     press(lane, event.code, timestamp);
@@ -635,18 +701,26 @@ window.addEventListener('keydown', event => {
 });
 window.addEventListener('keyup', event => {
   const lane = inputKeys().indexOf(event.code);
-  if (lane >= 0) release(lane, event.code);
+  if (lane >= 0) release(lane, event.code, inputTimestamp(event));
+  for (const token of [...held]) if (token.startsWith('recovery-') && token.endsWith(`-${event.code}`)) release(Number(token.split('-')[1]), token, inputTimestamp(event));
 });
+function inputTimestamp(event) { return Math.abs(event.timeStamp - performance.now()) < 1000 ? event.timeStamp : performance.now(); }
+function bindLaneControl(button, lane) {
+  button.addEventListener('pointerdown', event => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault(); button.setPointerCapture(event.pointerId);
+    press(lane, `pointer-${lane}-${event.pointerId}`, inputTimestamp(event));
+  });
+  if (button.dataset.holdLane !== undefined) button.addEventListener('keydown', event => {
+    if (event.code !== 'Space') return;
+    event.preventDefault();
+    if (!event.repeat) press(lane, `recovery-${lane}-Space`, inputTimestamp(event));
+  });
+}
 function bindLaneControls() {
 for (const button of laneButtons) {
   const lane = Number(button.dataset.lane);
-  button.addEventListener('pointerdown', event => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    event.preventDefault();
-    button.setPointerCapture(event.pointerId);
-    press(lane, `pointer-${lane}-${event.pointerId}`, event.timeStamp);
-  });
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, event => release(lane, `pointer-${lane}-${event.pointerId}`));
+  bindLaneControl(button, lane);
   // Assistive technology can activate the lane buttons without a pointer.
   button.addEventListener('click', event => {
     if (event.detail !== 0) return;
@@ -655,6 +729,11 @@ for (const button of laneButtons) {
   });
 }
 }
+// Recovery buttons can lose capture when their dialog closes. The physical
+// pointerup/cancel still releases ownership, even outside the original button.
+for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type, event => {
+  for (const token of [...held]) if (token.startsWith('pointer-') && token.endsWith(`-${event.pointerId}`)) release(Number(token.split('-')[1]), token, inputTimestamp(event));
+});
 window.addEventListener('blur', () => { clearHeld(); if (state === 'playing') pause(); });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { clearHeld(); if (state === 'playing') pause(); }

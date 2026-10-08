@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { highwayGeometry, projectHighway } from '../src/highway.js';
+import { highwayGeometry, projectHighway, projectHold } from '../src/highway.js';
 
 test('note centers meet their input lanes exactly at the hit time, in both key modes', () => {
   for (const [width, height] of [[343, 480], [800, 350], [1380, 720]]) {
@@ -40,5 +40,15 @@ test('the highway remains centered and finite before and after the judgment line
     const point = projectHighway(road, progress);
     assert.ok(Number.isFinite(point.y) && Number.isFinite(point.width));
     assert.ok(Math.abs(point.left + point.width / 2 - road.width / 2) < 1e-9);
+  }
+});
+
+
+test('hold body projects a fixed active head and descending tail at every speed/viewport',()=>{
+  for(const [w,h] of [[343,480],[800,350],[1380,720]])for(const speed of [1,3,6]){
+    const road=highwayGeometry(w,h),note={time:1,endTime:2};
+    const before=projectHold(road,note,.95,3.8/speed);assert.ok(before.tail.y<before.head.y);assert.ok(before.head.y<road.hitY);
+    const active=projectHold(road,{...note,holding:true},1.5,3.8/speed);assert.equal(active.head.y,road.hitY);assert.ok(active.tail.y<active.head.y);
+    const done=projectHold(road,{...note,holding:true},2,3.8/speed);assert.equal(done.head.y,done.tail.y);assert.equal(done.tail.y,road.hitY);
   }
 });
