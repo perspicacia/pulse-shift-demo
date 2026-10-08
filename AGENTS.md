@@ -45,7 +45,7 @@
 - 판정·채보·점수 변경 시 `npm test`, JavaScript 수정 후 `npm run check`를 실행한다.
 - 화면·입력·오디오 변경 시 브라우저에서 해당 기능을 함께 확인한다. 발표용 회귀 검사는 `npm run verify:demo`와 `DEMO.md`를 기준으로 하며, 58개 단위 검사와 26개 브라우저 흐름 검사 결과·검증 한계를 구분한다.
 - 기본 4키 배치는 D·F·J·K다. AFTERGLOW LEVEL 1과 ASTRAL VEIL LEVEL 2·3에 S·D·F / J·K·L 6키 실험을 선택할 수 있다. AFTERGLOW·ASTRAL LEVEL 2는 최대 두 동시 노트, ASTRAL LEVEL 3는 최대 세 동시 노트이며 TIDAL은 4키다. 지원하는 6키 난이도 선택은 유지하고, 지원하지 않는 조합만 기본 난이도로 바꾸며 기록은 키 개수별로 분리한다.
-- 공개 스냅샷 저장소는 `perspicacia/pulse-shift-demo`이며 기본 브랜치는 `main`이다. 개인 경로·백업·발표 자료·영상·브라우저 프로필·QA 로그는 커밋하지 않는다. 사용자가 공개를 명시한 `demo-videos/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4`와 `presentation/PULSE_SHIFT_PRESENTATION_9P.pdf`는 예외로 포함하며, 그 외 파일에 대한 공개 승인은 별도로 확인한다.
+- 공개 스냅샷 저장소는 `perspicacia/pulse-shift-demo`이며 기본 브랜치는 `main`이다. 개인 경로·백업·발표 자료·영상·브라우저 프로필·QA 로그는 커밋하지 않는다. 사용자가 공개를 명시한 `demo-videos/ASTRAL_VEIL_6KEY_LEVEL2_AUTOPLAY.mp4`와 `presentation/PULSE_SHIFT_프로젝트_발표자료.pdf`는 예외로 포함하며, 그 외 파일에 대한 공개 승인은 별도로 확인한다.
 - 음악 합성은 워커에서 수행하고, 플레이 중 입력을 방해하지 않는다. 합성 버퍼를 곡 ID별로 캐시한다.
 - 새 오리지널 곡의 채보는 합성과 동일한 악기 시점을 사용한다. 곡 선택·미리듣기·전체 플레이·기록 분리를 브라우저에서 검증한다.
 - 난이도 표시는 LEVEL 1·2·3으로 통일한다. 노트 밀도와 동시 입력으로 난이도를 조절하며 노트 속도와 구분한다.
