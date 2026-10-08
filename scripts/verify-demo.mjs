@@ -335,7 +335,7 @@ try {
   // Presentation-specific layout checks use this same isolated browser.
   await click('#start-button'); await until('document.body.dataset.screen === "game"');
   const stageInfo = await evaluate(`(()=>{let cover=document.getElementById('stage-cover'),art=document.querySelector('.play-song>img');return{cover:cover.getAttribute('src'),loaded:cover.complete&&cover.naturalWidth>0,opacity:getComputedStyle(cover).opacity,artRatio:art.getBoundingClientRect().width/art.getBoundingClientRect().height}})()`);
-  assert.equal(stageInfo.cover,'/assets/tidal-circuit.svg');assert.equal(stageInfo.loaded,true);assert.equal(stageInfo.opacity,'0.28');assert.ok(Math.abs(stageInfo.artRatio-1)<.01);
+  assert.equal(stageInfo.cover,'./assets/tidal-circuit.svg');assert.equal(stageInfo.loaded,true);assert.equal(stageInfo.opacity,'0.28');assert.ok(Math.abs(stageInfo.artRatio-1)<.01);
   await check('album cover follows Tidal, stays translucent and preserves the square card',{stageInfo});
   const layout = () => evaluate(`({viewport:{width:innerWidth,height:innerHeight},documentWidth:document.documentElement.scrollWidth,keys:[...document.querySelectorAll('[data-lane]')].map(b=>{let r=b.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}}),pause:(()=>{let r=document.getElementById('pause-button').getBoundingClientRect();return{width:r.width,height:r.height}})()})`);
   for(const [width,height,name] of [[375,812,'portrait'],[844,390,'landscape']]) {
@@ -353,7 +353,7 @@ try {
   await key('Escape');await until('document.getElementById("pause-dialog").open');await click('#quit-button');await until('document.body.dataset.screen === "menu"');
   await key('ArrowLeft');await click('button[data-key-count="6"]');await click('#start-button');await until('document.body.dataset.screen === "game"');
   const sixBounds=await layout();assert.equal(sixBounds.keys.length,6);assert.ok(sixBounds.keys.every(b=>b.width>=44&&b.height>=44&&b.right<=375));
-  assert.equal(await evaluate('document.getElementById("stage-cover").getAttribute("src")'),'/assets/afterglow.svg');
+  assert.equal(await evaluate('document.getElementById("stage-cover").getAttribute("src")'),'./assets/afterglow.svg');
   await screenshot('11-stage-six-key-portrait');await check('six-key small-screen controls and reduced-motion presentation',{bounds:sixBounds});
   await key('Escape');await until('document.getElementById("pause-dialog").open');await click('#quit-button');await until('document.body.dataset.screen === "menu"');
   await click('button[data-key-count="4"]');await cdp('Emulation.setEmulatedMedia',{features:[]});
