@@ -1,6 +1,6 @@
 # PULSE SHIFT
 
-**[게임 사이트 바로가기](https://perspicacia.github.io/pulse-shift-demo/) · [발표자료](presentation/PULSE_SHIFT_PRESENTATION_9P.pdf)**
+**[게임 사이트 바로가기](https://perspicacia.github.io/pulse-shift-demo/) · [발표자료 PDF 바로가기](presentation/PULSE_SHIFT_프로젝트_발표자료.pdf)**
 
 ## 발표 시연 바로 열기
 
