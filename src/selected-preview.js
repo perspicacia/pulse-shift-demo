@@ -2,7 +2,7 @@
 export function previewRange(track, duration = track.duration) {
   const beat = 60 / track.bpm;
   const length = Math.min(32 * beat, duration);
-  const offset = Math.max(0, Math.min(track.previewBeat * beat, duration - length));
+  const offset = Math.max(0, Math.min((track.personal ? track.beatOffset : 0) + track.previewBeat * beat, duration - length));
   return { offset, length };
 }
 

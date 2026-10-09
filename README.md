@@ -14,12 +14,14 @@
 - 판정·콤보·점수·정확도 및 곡·키 개수·레벨별 최고 기록 저장.
 - 노트 속도·싱크 보정, 음악·효과음 음량과 이펙트 설정.
 
+이 브랜치는 **개인 음악 불러오기 실험**도 제공합니다. 시작 화면에서 파일을 선택하고, BPM·첫 박 위치를 보정한 뒤 **10초 테스트** 또는 4/6키 LEVEL 1·2·3으로 플레이하세요. 음악은 서버로 보내지 않습니다. **40MB 이하·12초~5분**의 모노/스테레오 파일을 지원하며, 박자가 일정한 곡에 적합합니다. [사용법과 자동 분석의 한계](docs/PERSONAL_MUSIC.md). 이 기능은 아래 명령으로 실험 브랜치를 로컬 실행할 때 사용할 수 있습니다. 위 공개 게임 사이트는 main 버전입니다.
+
 ## 실행과 조작
 
 위 게임 사이트에서 바로 플레이할 수 있습니다. 로컬 실행은 **Node.js 22 이상**이 필요하며, 별도 패키지 설치는 필요하지 않습니다.
 
 ```sh
-git clone https://github.com/perspicacia/pulse-shift-demo.git
+git clone --branch codex/personal-music-sync https://github.com/perspicacia/pulse-shift-demo.git
 cd pulse-shift-demo
 npm run dev
 ```

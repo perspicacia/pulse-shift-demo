@@ -5,6 +5,8 @@ import { HitEffects } from './effects.js';
 import { highwayGeometry, drawHighway } from './highway.js';
 import { LobbyMusic } from './lobby-music.js';
 import { SelectedPreview } from './selected-preview.js';
+import { PersonalMusic } from './personal-music.js';
+import { personalTestRange } from './personal-analysis.js';
 import { keysFor, chartFor, modeRecordKey, sixKeyDifficulty, sixKeyDifficulties } from './modes.js';
 
 const $ = id => document.getElementById(id);
@@ -12,6 +14,9 @@ const audio = new AudioEngine();
 const effects = new HitEffects();
 const popAnimations = new Map();
 let activeTrack = BUILTIN_TRACKS[0];
+let personalTrack = null, testRange = null;
+const catalog = () => personalTrack ? [...BUILTIN_TRACKS, personalTrack] : BUILTIN_TRACKS;
+const supportedSix = () => activeTrack.personal ? Object.keys(DIFFICULTIES) : sixKeyDifficulties(activeTrack.id);
 const colors = { perfect: '#d5ff56', great: '#83e8f0', good: '#ffc984', miss: '#ff888f', empty: '#ff888f', hold: '#83e8f0' };
 const laneColors = ['#d5ff56', '#83e8f0', '#83e8f0', '#d5ff56'];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -44,16 +49,47 @@ const inputKeys = () => keysFor(settings.keyCount);
 const activeChart = () => chartFor(activeTrack, settings.keyCount, settings.difficulty);
 let lobbyStatus = 'idle';
 const selectedPreview = new SelectedPreview(audio, {
-  canPlay: () => state === 'menu' && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && settings.volume > 0,
+  canPlay: () => state === 'menu' && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && !$('personal-dialog').open && settings.volume > 0,
   onState: () => { lobby.sync(); renderMenuMusic(); },
   onError: error => { $('menu-error').textContent = error.message; $('menu-error').hidden = false; },
 });
 const lobby = new LobbyMusic(audio, {
   enabled: settings.lobbyEnabled,
-  canPlay: () => state === 'menu' && !selectedPreview.track && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && settings.lobbyVolume > 0,
+  canPlay: () => state === 'menu' && !selectedPreview.track && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && !$('personal-dialog').open && settings.lobbyVolume > 0,
   onState: status => { lobbyStatus = status; renderMenuMusic(); },
   onError: error => toast(error.message),
 });
+
+const personalMusic = new PersonalMusic(audio, {
+  canImport: () => state === 'menu',
+  onDialog: syncMenuMusic,
+  onTest: position => start({ test: true, testPosition: position }),
+  readProfiles: () => { const profiles = read('pulse-shift-personal-calibration-v1', {}); return profiles && typeof profiles === 'object' && !Array.isArray(profiles) ? profiles : {}; },
+  writeProfiles: profiles => { if (!write('pulse-shift-personal-calibration-v1', profiles)) toast('보정값을 저장하지 못했어요. 이번 화면에서는 사용할 수 있어요.'); },
+  onApply: track => {
+    const previous = personalTrack;
+    personalTrack = track;
+    renderPersonalCard();
+    selectTrack(track);
+    if (previous && previous.id !== track.id) audio.removeBuffer(previous.id);
+  },
+});
+
+function renderPersonalCard() {
+  let card = $('personal-track');
+  if (!card) {
+    card = document.createElement('button'); card.id = 'personal-track'; card.className = 'disc-card'; card.dataset.discCard = '';
+    card.innerHTML = '<span class="disc-card-art"><img src="./assets/personal-disc.svg" alt="" width="800" height="800"><img class="disc-record-art" src="./assets/personal-disc.svg" alt="" width="800" height="800"><span class="disc-gloss"></span><span class="disc-hub"></span></span><span class="disc-card-caption"><span class="track-index">04 / MY MUSIC</span><strong></strong><small></small></span><span class="selection-label" hidden>선택하기</span>';
+    card.addEventListener('click', () => selectTrack(personalTrack));
+    document.querySelector('.disc-rack').append(card);
+  }
+  card.setAttribute('aria-label', `개인 음악 ${personalTrack.title} 선택`);
+  card.querySelector('.disc-card-caption strong').textContent = personalTrack.title;
+  card.querySelector('.disc-card-caption small').textContent = `MY MUSIC · ${personalTrack.bpm} BPM`;
+  $('personal-current').textContent = personalTrack.title;
+  $('personal-calibrate').hidden = false;
+  $('personal-remove').hidden = false;
+}
 
 function renderMenuMusic() {
   const chosen = selectedPreview.track;
@@ -117,8 +153,9 @@ function updateBest() {
   $('best-grade').textContent = record?.grade ? `${record.grade} RANK · ${Number(record.accuracy).toFixed(2)}%` : 'NO RECORD';
 }
 
-function recordKey() { return modeRecordKey(activeTrack.id, settings.difficulty, settings.keyCount); }
+function recordKey() { return modeRecordKey(activeTrack.id, settings.difficulty, settings.keyCount) + (activeTrack.personal ? `:${activeTrack.revision}` : ''); }
 function currentRecord() {
+  if (activeTrack.personal) return records[recordKey()] || null;
   return records[recordKey()] || (settings.keyCount === 4 ? records[`${activeTrack.id}:${settings.difficulty}`] || (activeTrack.id === 'afterglow' ? records[settings.difficulty] : null) : null);
 }
 
@@ -126,31 +163,31 @@ function updateTrack() {
   const track = activeTrack;
   $('track-title').textContent = track.title;
   $('track-title').title = track.title;
-  $('track-artist').textContent = 'PULSE LAB — ORIGINAL MIX';
-  $('track-source').textContent = 'ORIGINAL';
+  $('track-artist').textContent = track.personal ? 'MY MUSIC — AUTO CHART' : 'PULSE LAB — ORIGINAL MIX';
+  $('track-source').textContent = track.personal ? 'MY MUSIC' : 'ORIGINAL';
   $('track-genre').textContent = track.genre;
   $('track-description').textContent = track.description;
-  $('cover-badge').textContent = 'PULSE ORIGINAL';
+  $('cover-badge').textContent = track.personal ? 'MY MUSIC' : 'PULSE ORIGINAL';
   $('deck-title').textContent = track.title;
   document.querySelector('.art-column').classList.toggle('tidal-art', track.id === 'tidal-circuit');
   for (const image of document.querySelectorAll('[data-cover]')) { image.src = track.cover; image.alt = `${track.title} 앨범 아트`; }
   $('stage-cover').src = track.cover;
   $('preview-button').setAttribute('aria-label', `${track.title} 음악 미리듣기`);
-  $('bpm-heading').textContent = 'BPM';
+  $('bpm-heading').textContent = track.personal ? 'BPM · 보정값' : 'BPM';
   $('bpm-label').textContent = track.bpm;
   $('duration-label').textContent = formatTime(track.duration);
   $('game-title').textContent = track.title;
   $('play-title').textContent = track.title;
   $('play-artist').textContent = track.artist;
-  $('play-source').textContent = `PULSE ORIGINAL / ${track.number}`;
+  $('play-source').textContent = `${track.personal ? 'MY MUSIC' : 'PULSE ORIGINAL'} / ${track.number}`;
   $('play-bpm').textContent = `${track.bpm} BPM`;
   $('result-title').textContent = track.title;
   $('result-song-meta').textContent = `${track.artist} / ${track.bpm} BPM`;
   $('collection-name').textContent = 'DISC COLLECTION';
-  const count = String(BUILTIN_TRACKS.length).padStart(2, '0');
+  const count = String(catalog().length).padStart(2, '0');
   $('collection-count').textContent = `/ ${count}`;
   $('tracklist-count').textContent = count;
-  for (const { buttonId: id, id: trackId } of BUILTIN_TRACKS) {
+  for (const { buttonId: id, id: trackId } of catalog()) {
     const selected = trackId === track.id;
     $(id).setAttribute('aria-pressed', String(selected));
     $(id).querySelector('.selection-label').textContent = selected ? 'SELECTED' : '선택하기';
@@ -160,7 +197,7 @@ function updateTrack() {
 }
 
 function updateDiscSelector() {
-  const tracks = BUILTIN_TRACKS, current = tracks.findIndex(track => track.id === activeTrack.id);
+  const tracks = catalog(), current = tracks.findIndex(track => track.id === activeTrack.id);
   tracks.forEach((track, index) => {
     // Keep three discs around the player, including across the first/last song.
     let slot = index - current;
@@ -170,6 +207,7 @@ function updateDiscSelector() {
       if (slot < -half) slot += tracks.length;
     }
     const card = $(track.buttonId);
+    card.hidden = Math.abs(slot) > 1;
     card.dataset.position = String(slot);
     card.style.setProperty('--slot', slot);
     card.style.setProperty('--tilt', `${Math.sign(slot) * 12}deg`);
@@ -181,7 +219,7 @@ function updateDiscSelector() {
 
 function stepTrack(direction, focusDisc = false) {
   if (state !== 'menu') return;
-  const tracks = BUILTIN_TRACKS, index = tracks.findIndex(track => track.id === activeTrack.id);
+  const tracks = catalog(), index = tracks.findIndex(track => track.id === activeTrack.id);
   selectTrack(tracks[(index + direction + tracks.length) % tracks.length]);
   if (focusDisc) $(activeTrack.buttonId).focus({ preventScroll: true });
 }
@@ -189,6 +227,7 @@ function stepTrack(direction, focusDisc = false) {
 function selectTrack(track) {
   if (state !== 'menu' || !track) return;
   actionToken++;
+  if (track !== activeTrack) selectedPreview.invalidate();
   if (track.id !== activeTrack.id) audio.stop();
   activeTrack = track;
   $('menu-error').hidden = true;
@@ -199,7 +238,7 @@ function selectTrack(track) {
 async function prepareAudio(track = activeTrack) {
   await audio.initContext();
   await audio.prepareFeedback().catch(error => toast(error.message));
-  return await audio.init(track.id);
+  return track.personal ? track.buffer : await audio.init(track.id);
 }
 
 
@@ -208,16 +247,16 @@ function updateModeUI() {
   document.body.dataset.keyCount = String(settings.keyCount);
   for (const button of document.querySelectorAll('button[data-key-count]')) {
     button.setAttribute('aria-pressed', String(Number(button.dataset.keyCount) === settings.keyCount));
-    button.disabled = Number(button.dataset.keyCount) === 6 && !sixKeyDifficulty(activeTrack.id);
+    button.disabled = Number(button.dataset.keyCount) === 6 && !supportedSix().length;
   }
-  for (const button of document.querySelectorAll('[data-difficulty]')) button.disabled = six && !sixKeyDifficulties(activeTrack.id).includes(button.dataset.difficulty);
+  for (const button of document.querySelectorAll('[data-difficulty]')) button.disabled = six && !supportedSix().includes(button.dataset.difficulty);
   for (const id of ['play-key-count', 'stage-key-count']) $(id).textContent = `${settings.keyCount} KEY${six ? ' · 실험' : ''}`;
   const suffix = document.createElement('span'); suffix.className = 'stat-suffix'; suffix.textContent = ' KEY';
   $('menu-key-count').replaceChildren(String(settings.keyCount), suffix);
   $('header-key-count').textContent = `${settings.keyCount} KEY RHYTHM${six ? ' · EXPERIMENT' : ' EXPERIENCE'}`;
   $('settings-key-count').textContent = `${settings.keyCount} KEY LAYOUT`;
   document.title = `PULSE SHIFT · ${settings.keyCount} KEY RHYTHM${six ? ' · 실험' : ''}`;
-  $('mode-hint').textContent = six
+  $('mode-hint').textContent = activeTrack.personal ? `개인 음악 자동 채보 · ${settings.keyCount}키 LEVEL 1·2·3 · 일반 노트` : six
     ? `6키 실험 · ${activeTrack.title} ${DIFFICULTIES[settings.difficulty].label} · S D F / J K L${activeTrack.id === 'astral-veil' && settings.difficulty === 'normal' ? ' · 롱노트 포함' : ''}`
     : '6키 실험: AFTERGLOW LEVEL 1 / ASTRAL VEIL LEVEL 2·3';
   const labels = keys.map(key => key.slice(3));
@@ -250,7 +289,7 @@ function updateModeUI() {
 
 function updateSettings(persist = true) {
   if (settings.keyCount === 6) {
-    const supported = sixKeyDifficulties(activeTrack.id);
+    const supported = supportedSix();
     if (!supported.length) settings.keyCount = 4;
     else if (!supported.includes(settings.difficulty)) settings.difficulty = sixKeyDifficulty(activeTrack.id);
   }
@@ -292,7 +331,7 @@ function clearHeld() {
   if (state === 'paused') updateHoldRecovery();
 }
 
-async function start() {
+async function start({ test = false, testPosition = 'start' } = {}) {
   if (!['menu', 'result'].includes(state)) return;
   state = 'loading';
   const token = ++actionToken;
@@ -304,7 +343,10 @@ async function start() {
   try {
     const buffer = await prepareAudio();
     if (token !== actionToken) return;
-    session = new Session(settings.difficulty, activeChart());
+    testRange = test && activeTrack.personal ? personalTestRange(activeTrack, testPosition) : null;
+    const chart = testRange ? activeChart().filter(note => note.time >= testRange.from && note.time < testRange.to - .15) : activeChart();
+    if (!chart.length) throw new Error('선택한 테스트 구간에 노트가 없어요. 다른 구간이나 보정값을 선택해주세요.');
+    session = new Session(settings.difficulty, chart);
     clearEffects(); laneFlashes.fill(0); clearHeld(); lastNoteIndex = 0; lastFeedback = 0;
     $('judgment-label').textContent = '';
     $('combo-label').textContent = '';
@@ -313,10 +355,10 @@ async function start() {
     $('play-elapsed').textContent = '00:00';
     $('play-progress').style.width = '0%';
     const difficulty = DIFFICULTIES[settings.difficulty];
-    $('game-difficulty').textContent = difficulty.label;
+    $('game-difficulty').textContent = `${difficulty.label}${testRange ? ' · SYNC TEST' : ''}`;
     $('stage-speed').textContent = `SPEED ×${settings.speed.toFixed(1)}`;
-    $('play-duration').textContent = formatTime(activeTrack.duration);
-    audio.play({ buffer, countdown: 3 });
+    $('play-duration').textContent = formatTime(testRange ? testRange.to - testRange.from : activeTrack.duration);
+    audio.play({ buffer, countdown: 3, offset: testRange?.from || 0 });
     state = 'playing';
     screen('game');
     resizeCanvas();
@@ -325,6 +367,7 @@ async function start() {
     if (document.hidden) pause();
   } catch (error) {
     state = 'menu';
+    testRange = null;
     screen('menu');
     $('menu-error').textContent = error.message;
     $('menu-error').hidden = false;
@@ -397,26 +440,26 @@ function menu() {
 
 function finish() {
   if (state !== 'playing') return;
-  session.finish(activeTrack.duration + 1);
+  session.finish((testRange?.to ?? activeTrack.duration) + 1);
   state = 'result';
   audio.stop();
   clearHeld();
   clearEffects();
   const previous = currentRecord();
-  const newBest = !previous || session.score > previous.score;
+  const newBest = !testRange && (!previous || session.score > previous.score);
   if (newBest) {
     records[recordKey()] = { score: session.score, accuracy: session.accuracy, grade: session.grade, maxCombo: session.maxCombo };
     if (!write('pulse-shift-records', records)) toast('기록 저장이 차단되어 이번 결과만 표시돼요.');
   }
-  $('result-difficulty').textContent = `${DIFFICULTIES[settings.difficulty].label} · ${settings.keyCount} KEY${settings.keyCount === 6 ? ' · 실험' : ''}`;
+  $('result-difficulty').textContent = `${DIFFICULTIES[settings.difficulty].label} · ${settings.keyCount} KEY${settings.keyCount === 6 ? ' · 실험' : ''}${testRange ? ' · SYNC TEST' : ''}`;
   $('result-grade').textContent = session.grade;
   $('result-score').textContent = session.score.toLocaleString('en-US');
   $('result-accuracy').textContent = `${session.accuracy.toFixed(2)}%`;
   $('result-combo').textContent = session.maxCombo;
   for (const [type, count] of Object.entries(session.counts)) $(`result-${type}`).textContent = count;
   $('new-record').hidden = !newBest || session.score === 0;
-  $('clear-status').textContent = session.fullCombo ? 'FULL COMBO' : `TRACK FINISHED${session.emptyPresses ? ` · EMPTY ${session.emptyPresses}` : ''}`;
-  $('result-message').textContent = { S: '완벽에 가까운 비트.', A: '리듬을 제대로 탔어요.', B: '좋은 리듬이었어요.', C: '조금씩 비트가 맞아가요.', D: '다음 비트는 더 가까이.' }[session.grade];
+  $('clear-status').textContent = testRange ? 'SYNC TEST · 기록 저장 안 함' : session.fullCombo ? 'FULL COMBO' : `TRACK FINISHED${session.emptyPresses ? ` · EMPTY ${session.emptyPresses}` : ''}`;
+  $('result-message').textContent = testRange ? '테스트 완료. 박자·노트 보정에서 조정해보세요.' : { S: '완벽에 가까운 비트.', A: '리듬을 제대로 탔어요.', B: '좋은 리듬이었어요.', C: '조금씩 비트가 맞아가요.', D: '다음 비트는 더 가까이.' }[session.grade];
   screen('result');
   $('retry-button').focus({ preventScroll: true });
 }
@@ -586,7 +629,7 @@ function frame(now) {
   const time = songTime - settings.offset / 1000;
   if (state === 'playing') {
     for (const event of session.expire(time)) feedback(event, now);
-    if (songTime >= activeTrack.duration + Math.max(0, settings.offset / 1000)) { finish(); return; }
+    if (songTime >= (testRange?.to ?? activeTrack.duration) + Math.max(0, settings.offset / 1000)) { finish(); return; }
   }
   draw(time, now);
   if (celebrationUntil && now > celebrationUntil) {
@@ -594,17 +637,19 @@ function frame(now) {
     $('celebration-banner').hidden = true;
     document.querySelector('.stage').classList.remove('celebrating');
   }
-  if (songTime < 0) {
-    const number = Math.max(1, Math.ceil(-songTime));
+  const elapsed = songTime - (testRange?.from || 0);
+  if (elapsed < 0) {
+    const number = Math.max(1, Math.ceil(-elapsed));
     const markup = `<span>GET READY</span>${number > 3 ? 3 : number}`;
     if ($('countdown').innerHTML !== markup) $('countdown').innerHTML = markup;
-  } else if (songTime < 0.55) { $('countdown').textContent = 'GO'; }
+  } else if (elapsed < 0.55) { $('countdown').textContent = 'GO'; }
   else if ($('countdown').textContent) { $('countdown').textContent = ''; }
   if (feedbackType && now - lastFeedback > 650) $('judgment-label').style.opacity = Math.max(0, 1 - (now - lastFeedback - 650) / 250);
   if (now - uiTime > 80) {
     uiTime = now;
-    $('play-elapsed').textContent = formatTime(Math.min(songTime, activeTrack.duration));
-    $('play-progress').style.width = `${clamp(songTime / activeTrack.duration * 100, 0, 100, 0)}%`;
+    const duration = testRange ? testRange.to - testRange.from : activeTrack.duration;
+    $('play-elapsed').textContent = formatTime(Math.min(elapsed, duration));
+    $('play-progress').style.width = `${clamp(elapsed / duration * 100, 0, 100, 0)}%`;
   }
 }
 
@@ -614,7 +659,7 @@ for (const button of document.querySelectorAll('button[data-key-count]')) button
   updateSettings();
 });
 $('start-button').addEventListener('click', start);
-$('retry-button').addEventListener('click', start);
+$('retry-button').addEventListener('click', () => start({ test: Boolean(testRange), testPosition: testRange?.position }));
 $('return-button').addEventListener('click', menu);
 $('preview-button').addEventListener('click', preview);
 $('pause-button').addEventListener('click', pause);
@@ -624,6 +669,16 @@ $('pause-dialog').addEventListener('cancel', event => { event.preventDefault(); 
 $('track-previous').addEventListener('click', () => stepTrack(-1));
 $('track-next').addEventListener('click', () => stepTrack(1));
 for (const track of BUILTIN_TRACKS) $(track.buttonId).addEventListener('click', () => selectTrack(track));
+$('personal-remove').addEventListener('click', () => {
+  if (state !== 'menu' || !personalTrack) return;
+  const previous = personalTrack;
+  if (activeTrack.personal) selectTrack(BUILTIN_TRACKS[0]);
+  personalTrack = null; personalMusic.current = null;
+  $('personal-track').remove(); audio.removeBuffer(previous.id);
+  $('personal-current').textContent = '내 음악으로 플레이';
+  $('personal-calibrate').hidden = true; $('personal-remove').hidden = true;
+  updateTrack();
+});
 
 for (const button of document.querySelectorAll('[data-difficulty]')) button.addEventListener('click', () => {
   if (state !== 'menu') return;
@@ -676,7 +731,7 @@ for (const dialog of [$('settings-dialog'), $('help-dialog')]) dialog.addEventLi
 
 window.addEventListener('keydown', event => {
   if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
-  if ($('settings-dialog').open || $('help-dialog').open) return;
+  if ($('settings-dialog').open || $('help-dialog').open || $('personal-dialog').open) return;
   // Keep native slider/text editing keys; song navigation only operates in the menu.
   if (state === 'menu' && ['ArrowLeft', 'ArrowRight'].includes(event.code) && !event.target.closest('input, select, textarea, [contenteditable="true"]')) {
     event.preventDefault();
@@ -755,7 +810,7 @@ window.addEventListener('keydown', event => {
   selectedPreview.unlock();
   if (!event.target.closest('#lobby-toggle')) lobby.unlock();
 }, { capture: true });
-window.addEventListener('pagehide', () => { selectedPreview.invalidate(); audio.stopLobby(); audio.stop(); });
+window.addEventListener('pagehide', () => { personalMusic.cancel(); selectedPreview.invalidate(); audio.stopLobby(); audio.stop(); });
 if (new URLSearchParams(location.search).get('help') === '1') $('help-dialog').showModal();
 updateTrack();
 screen('menu');

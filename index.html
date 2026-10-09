@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="./track-selector.css">
   <link rel="stylesheet" href="./menu-background.css">
   <link rel="stylesheet" href="./playfield.css">
+  <link rel="stylesheet" href="./personal-music.css">
   <script type="module" src="./src/app.js"></script>
 </head>
 <body>
@@ -42,6 +43,10 @@
         <p id="lobby-status" role="status">첫 입력으로 시작 · 곡을 고르면 자동 미리듣기</p>
         <button id="lobby-toggle" aria-label="대기 음악 켜기" aria-pressed="false"><svg aria-hidden="true"><use href="#i-play"/></svg><span id="lobby-toggle-label">켜기</span></button>
       </div>
+      <section class="personal-library" aria-label="개인 음악">
+        <div><span class="label">MY MUSIC · LOCAL ONLY</span><strong id="personal-current">내 음악으로 플레이</strong><p>파일은 이 브라우저에서만 읽어요. 새로고침 후에는 다시 선택해주세요.</p></div>
+        <div class="personal-actions"><button id="personal-open" class="secondary-button">음악 불러오기</button><button id="personal-calibrate" class="secondary-button" hidden>박자·노트 보정</button><button id="personal-remove" class="secondary-button" hidden>음악 빼기</button></div>
+      </section>
       <section class="disc-selector" id="disc-selector" aria-label="LP 턴테이블 곡 선택" aria-roledescription="carousel" aria-describedby="disc-navigation-help">
         <div class="deck-scene">
           <div class="scene-grid" aria-hidden="true"></div>
@@ -116,6 +121,28 @@
       <div class="result-card"><div class="result-art"><img data-cover src="./assets/afterglow.svg" alt="AFTERGLOW 앨범 아트" width="400" height="400"><div><p id="result-song-meta" class="eyebrow">PULSE LAB / 148 BPM</p><h2 id="result-title">AFTERGLOW</h2></div></div><div class="result-details"><div class="result-grade-line"><span id="result-grade" class="result-grade">A</span><div><span class="eyebrow">YOUR PERFORMANCE</span><h2 id="result-message">좋은 리듬이었어요.</h2><span id="new-record" class="tag tag-accent" hidden>NEW PERSONAL BEST</span></div></div><div class="result-score-line"><div><span class="label">TOTAL SCORE</span><strong id="result-score">0</strong></div><div><span class="label">ACCURACY</span><strong id="result-accuracy">0%</strong></div></div><div class="result-counts"><div><span>PERFECT</span><strong id="result-perfect">0</strong></div><div><span>GREAT</span><strong id="result-great">0</strong></div><div><span>GOOD</span><strong id="result-good">0</strong></div><div><span>MISS</span><strong id="result-miss">0</strong></div></div><div class="result-extra"><span>MAX COMBO <strong id="result-combo">0</strong></span><span id="clear-status">TRACK FINISHED</span></div><div class="result-actions"><button id="return-button" class="secondary-button">곡 선택으로</button><button id="retry-button" class="primary-button">다시 플레이<svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div></div></div>
     </section>
   </main>
+  <dialog id="personal-dialog" class="modal personal-modal" aria-labelledby="personal-heading" aria-describedby="personal-privacy">
+    <div class="modal-heading"><div><p class="eyebrow">MY MUSIC</p><h2 id="personal-heading">내 음악, 내 리듬</h2></div><button id="personal-close" class="icon-button" aria-label="음악 불러오기 닫기"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <p id="personal-privacy">파일은 서버로 전송하지 않아요. 이 브라우저에서 분석하고 재생해요.</p>
+    <label class="personal-file-label" for="personal-file">음악 파일 선택</label>
+    <input id="personal-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.aac" aria-describedby="personal-file-hint">
+    <p id="personal-file-hint" class="personal-help">MP3·WAV 등 · 40MB 이하<br>12초~5분 · 모노/스테레오</p>
+    <p id="personal-status" class="personal-status" role="status" aria-live="polite">음악 파일을 선택해주세요.</p>
+    <div id="personal-editor" hidden>
+      <h3 id="personal-title"></h3>
+      <canvas id="personal-waveform" width="640" height="100" role="img" aria-label="음악 전체 파형과 첫 박 위치. 아래 숫자 입력으로 위치를 조정할 수 있어요."></canvas>
+      <div class="personal-fields">
+        <div><label for="personal-bpm">BPM · 박자 속도</label><input id="personal-bpm" type="number" min="60" max="240" step="0.01" required aria-describedby="personal-bpm-hint"><div class="personal-nudges"><button class="secondary-button" data-bpm-factor="0.5">절반으로</button><button class="secondary-button" data-bpm-factor="2">두 배로</button></div><p id="personal-bpm-hint" class="personal-help">뒤로 갈수록 어긋나면 BPM을 조정해요.</p></div>
+        <div><label for="personal-first-beat">첫 박 위치 · 초</label><input id="personal-first-beat" type="number" min="0" step="0.001" required aria-describedby="personal-beat-hint"><div class="personal-nudges"><button class="secondary-button" data-beat-nudge="-0.01">−10 ms</button><button class="secondary-button" data-beat-nudge="0.01">+10 ms</button></div><p id="personal-beat-hint" class="personal-help">계속 일정하게 어긋나면 위치를 조정해요.</p></div>
+      </div>
+      <p class="personal-help">BPM과 첫 박을 적용하면 노트 시간이 다시 계산돼요. 박자가 일정한 곡에 적합하며, 템포 변화·복잡한 리듬은 완벽히 맞지 않을 수 있어요. 롱노트는 자동으로 만들지 않아요.</p>
+      <button id="personal-reset" class="secondary-button">자동 추정값으로 되돌리기</button>
+      <label for="personal-test-position">10초 테스트 구간</label><select id="personal-test-position"><option value="start">시작 · 첫 박 근처</option><option value="middle">중간 · 곡의 가운데</option><option value="end">끝 · 마지막 10초</option></select>
+      <div class="personal-test-actions"><button id="personal-test" class="secondary-button">적용하고 10초 테스트</button><button id="personal-apply" class="primary-button">적용하고 곡 선택</button></div>
+      <p class="personal-help">테스트 기록은 저장하지 않아요. 기기 출력 지연은 게임 설정의 싱크 보정으로 조정해주세요.</p>
+    </div>
+    <p id="personal-error" class="error-message" role="alert" hidden></p>
+  </dialog>
   <footer class="footer"><span>PULSE SHIFT <span class="muted">/</span> FIRST CONTACT</span><span>비트가 시작되는 곳, 당신의 손끝.</span><span>PROTOTYPE <span class="muted">0.6.0</span></span></footer>
 
   <dialog id="settings-dialog" class="modal" aria-labelledby="settings-heading"><div class="modal-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h2 id="settings-heading">플레이 설정</h2></div><button class="icon-button" data-close aria-label="설정 닫기"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div><div class="setting-field"><label for="volume-input">음악 볼륨 <output id="volume-output">65%</output></label><input id="volume-input" type="range" min="0" max="100" step="1" value="65"></div><div class="setting-field"><label for="effects-volume-input">타격음 <output id="effects-volume-output">70%</output></label><input id="effects-volume-input" type="range" min="0" max="100" step="1" value="70"><div class="combo-preview-row"><p>음정 없는 짧은 타격음. 곡 음량에 맞춰 강도가 조절돼요.</p><button id="hit-preview-button" class="secondary-button" aria-label="타격음 미리듣기"><svg aria-hidden="true"><use href="#i-play"/></svg>타격음 듣기</button></div></div>

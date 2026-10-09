@@ -78,6 +78,26 @@ test('audible output timestamps map an input event onto the music timeline', () 
   assert.ok(Math.abs(audio.time(perf + 20) - 7.02) < 1e-9);
 });
 
+test('a personal decoded buffer previews and plays locally without fetch or synthesis', async () => {
+  const originalWindow = globalThis.window, originalWorker = globalThis.Worker, originalFetch = globalThis.fetch;
+  const context = feedbackContext();
+  globalThis.window = { AudioContext: class { constructor() { return context; } } };
+  globalThis.Worker = class { constructor() { throw new Error('Personal audio cannot be synthesized'); } };
+  globalThis.fetch = () => { throw new Error('Personal audio cannot be uploaded or fetched'); };
+  try {
+    const audio = new AudioEngine(), buffer = context.createBuffer(2, 12000 * 18, 12000);
+    audio.registerBuffer('personal-fixture', buffer);
+    assert.equal(await audio.init('personal-fixture'), buffer);
+    assert.equal(audio.playPreview(buffer, { offset: 4, length: 10 }), true);
+    audio.play({ buffer, countdown: 3, offset: 4 });
+    assert.equal(audio.previewSource, null); assert.equal(audio.source.buffer, buffer);
+    assert.equal(audio.offset, 4); assert.equal(audio.source.started, 5.12);
+    assert.equal(audio.originalBuffer, null);
+    audio.stop(); audio.removeBuffer('personal-fixture');
+    assert.equal(audio.musicBuffers.has('personal-fixture'), false); assert.equal(audio.musicReady.has('personal-fixture'), false);
+  } finally { globalThis.window = originalWindow; globalThis.Worker = originalWorker; globalThis.fetch = originalFetch; }
+});
+
 test('stale output timestamps after a pause cannot jump song time by the paused wall-clock duration', async () => {
   const audio = new AudioEngine();
   audio.source = {};

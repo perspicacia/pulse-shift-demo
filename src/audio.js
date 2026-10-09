@@ -50,6 +50,7 @@ export class AudioEngine {
 
   async init(trackId = 'afterglow') {
     await this.initContext();
+    if (this.musicBuffers.has(trackId)) return this.musicBuffers.get(trackId);
     if (!this.musicReady.has(trackId)) this.musicReady.set(trackId, new Promise((resolve, reject) => {
       // The menu must be audible promptly after the first gesture. This original
       // loop is rendered at build time; playable compositions still use workers.
@@ -93,6 +94,13 @@ export class AudioEngine {
       this.comboBuffers[kind] = buffer;
     }
   }
+
+  registerBuffer(id, buffer) {
+    this.musicBuffers.set(id, buffer);
+    this.musicReady.set(id, Promise.resolve(buffer));
+  }
+
+  removeBuffer(id) { this.musicBuffers.delete(id); this.musicReady.delete(id); }
 
   play({ countdown = 0, offset = 0, buffer = this.buffer } = {}) {
     if (!buffer) throw new Error('먼저 음악을 준비해주세요.');
