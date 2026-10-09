@@ -84,6 +84,11 @@ export function createAstralSixKeyChart() {
 }
 
 export function chartFor(track, keyCount, difficulty) {
+  if (track.personal) {
+    const chart = track.charts[keyCount]?.[difficulty];
+    if (!chart) throw new RangeError('지원하지 않는 개인 음악 채보입니다.');
+    return chart;
+  }
   if (keyCount === 4) return track.charts[difficulty];
   if (keyCount !== 6 || !sixKeyDifficulties(track.id).includes(difficulty)) {
     throw new RangeError('6키 실험은 AFTERGLOW LEVEL 1과 ASTRAL VEIL LEVEL 2·3에서 지원합니다.');

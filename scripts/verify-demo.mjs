@@ -11,7 +11,7 @@ const pageScheduledInputs = process.env.QA_INPUT_DRIVER === 'page';
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const output = join(root, 'artifacts', 'demo-qa', stamp);
 await mkdir(output, { recursive: true });
-const report = { version: 'v1 / DJMAX-inspired / PULSE SHIFT 0.6.0', baseline: 'pulse-shift-demo standalone snapshot', startedAt: new Date().toISOString(), status: 'running', checks: [], limitations: ['Headless Chrome output is muted. Real speaker/headphone sound, subjective fun and physical input latency require a human rehearsal.', 'Keyboard input is automated, not a human performance. QA_INPUT_DRIVER=page schedules full-song events inside the page; startup, native first-hit/duplicate, hold/release and menu controls still use CDP.', 'The catalog contains the three bundled original songs; file import and automatic chart analysis are removed.'] };
+const report = { version: 'v1 / DJMAX-inspired / PULSE SHIFT 0.6.0', baseline: 'pulse-shift-demo standalone snapshot', startedAt: new Date().toISOString(), status: 'running', checks: [], limitations: ['Headless Chrome output is muted. Real speaker/headphone sound, subjective fun and physical input latency require a human rehearsal.', 'Keyboard input is automated, not a human performance. QA_INPUT_DRIVER=page schedules full-song events inside the page; startup, native first-hit/duplicate, hold/release and menu controls still use CDP.', 'This regression checks bundled songs. Personal-file selection and calibration are verified separately in the UI.'] };
 const log = (message) => console.log(message);
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 let chrome, server, socket, profile, serverLog = '', chromeLog = '', cdp;
@@ -29,7 +29,7 @@ async function command(args, filename) {
 }
 
 async function fingerprints() {
-  const paths = ['.gitignore', 'index.html', 'styles.css', 'track-selector.css', 'menu-background.css', 'playfield.css', 'package.json', 'README.md', 'AGENTS.md', 'DEMO.md', 'CHANGELOG.md', 'server.mjs'];
+  const paths = ['.gitignore', 'index.html', 'styles.css', 'track-selector.css', 'menu-background.css', 'playfield.css', 'personal-music.css', 'package.json', 'README.md', 'AGENTS.md', 'DEMO.md', 'CHANGELOG.md', 'server.mjs'];
   for (const folder of ['src', 'scripts', 'tests', 'assets']) {
     const walk = async dir => { for (const entry of await readdir(join(root, dir), { withFileTypes: true })) { const p = `${dir}/${entry.name}`; if (entry.isDirectory()) await walk(p); else paths.push(p); } };
     await walk(folder);
@@ -185,14 +185,14 @@ try {
   assert.equal((await snapshot()).audio.length, 0, 'No audio should autoplay before a trusted gesture');
   await screenshot('01-v1-track-select'); await check('v1 entry point; audio waits for gesture');
   const catalog=await evaluate(`({tracks:[...document.querySelectorAll('[data-disc-card]')].map(b=>b.dataset.builtinTrack),count:document.getElementById('tracklist-count').textContent,fileInputs:document.querySelectorAll('input[type="file"]').length,importControls:document.querySelectorAll('#music-import,#empty-disc,#custom-track').length})`);
-  assert.deepEqual(catalog,{tracks:['afterglow','tidal-circuit','astral-veil'],count:'03',fileInputs:0,importControls:0});
+  assert.deepEqual(catalog,{tracks:['afterglow','tidal-circuit','astral-veil'],count:'03',fileInputs:1,importControls:0});
   await cdp('Emulation.setDeviceMetricsOverride',{width:375,height:812,deviceScaleFactor:1,mobile:false});
   await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
   assert.equal(await evaluate('document.documentElement.scrollWidth'),375);
   assert.equal(await evaluate(`document.querySelectorAll('[data-disc-card][data-position="0"]').length`),1);
   await screenshot('00-three-track-mobile');
   await cdp('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
-  await check('three-song catalog without upload controls; mobile menu has no overflow',{catalog});
+  await check('three bundled songs and local file input; mobile menu has no overflow',{catalog});
   const loadingStarted = Date.now();
   await key('ArrowRight'); await until('document.getElementById("track-title").textContent === "TIDAL CIRCUIT" && document.getElementById("lobby-music").dataset.state === "playing" && document.getElementById("preview-button").getAttribute("aria-pressed") === "true"');
   await check('trusted selection unlocks audio and automatically previews TIDAL CIRCUIT');

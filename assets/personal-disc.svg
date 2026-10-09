@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs><radialGradient id="p"><stop stop-color="#233357"/><stop offset=".55" stop-color="#113343"/><stop offset="1" stop-color="#07121b"/></radialGradient></defs>
+  <rect width="800" height="800" fill="url(#p)"/>
+  <g fill="none" stroke="#83e8f0" opacity=".35"><circle cx="400" cy="400" r="350"/><circle cx="400" cy="400" r="290"/><circle cx="400" cy="400" r="220"/><path d="M80 400h130l40-70 50 140 60-200 65 260 40-160 50 60 35-30h170" stroke-width="6"/></g>
+  <circle cx="400" cy="400" r="52" fill="#08131e" stroke="#d5ff56" stroke-width="3"/>
+  <text x="400" y="165" text-anchor="middle" fill="#83e8f0" font-family="sans-serif" font-size="18" letter-spacing="5">YOUR SOUND / YOUR RHYTHM</text>
+  <text x="400" y="590" text-anchor="middle" fill="#d5ff56" font-family="sans-serif" font-size="62" font-weight="700" letter-spacing="4">MY MUSIC</text>
+  <text x="400" y="636" text-anchor="middle" fill="#c8d9e1" font-family="sans-serif" font-size="20" letter-spacing="3">LOCAL COLLECTION</text>
+</svg>
