@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">SUNSET SIP 앨범 커버</title><desc id="desc">살구색 해가 남색 바다 위에 지고 빛의 물결이 잔잔하게 퍼지는 오리지널 라운지 앨범 아트.</desc>
+  <defs>
+    <linearGradient id="sky" x2="0" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#242440"/><stop offset=".34" stop-color="#85516e"/><stop offset=".58" stop-color="#e69c83"/><stop offset=".59" stop-color="#27585f"/><stop offset="1" stop-color="#122d38"/></linearGradient>
+    <linearGradient id="sun" x1="0" y1="190" x2="0" y2="435" gradientUnits="userSpaceOnUse"><stop stop-color="#fff0b8"/><stop offset="1" stop-color="#f7b57b"/></linearGradient>
+    <linearGradient id="reflection" x1="0" y1="420" x2="0" y2="725" gradientUnits="userSpaceOnUse"><stop stop-color="#ffd5a0" stop-opacity=".9"/><stop offset="1" stop-color="#ffb585" stop-opacity="0"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#f3c391" stop-opacity=".36"/><stop offset="1" stop-color="#f3c391" stop-opacity="0"/></radialGradient>
+    <linearGradient id="shade" x1="0" y1="560" x2="0" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#10232d" stop-opacity="0"/><stop offset="1" stop-color="#10232d" stop-opacity=".94"/></linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h800v800H0z"/>
+  <circle cx="400" cy="325" r="285" fill="url(#glow)"/>
+  <circle cx="400" cy="308" r="115" fill="url(#sun)"/>
+  <path d="M0 407c135 7 222-7 400 0s299-3 400 0v393H0z" fill="#204b55"/>
+  <g stroke-linecap="round" stroke="url(#reflection)"><path d="M345 434h110M330 450h140M348 469h104M318 491h164M334 513h132M305 539h190M329 565h142M292 591h216M311 621h178M287 653h226M266 690h268" stroke-width="5"/></g>
+  <g stroke="#8cc3b9" stroke-opacity=".36" stroke-linecap="round"><path d="M-35 473c68-8 119 5 187-2s120-1 178 4M480 474c77-5 112 5 174 0s122-6 174-2M-15 556c58-4 82 3 147-4s109-5 163-1M515 552c58-7 103 3 157-3s113-2 158 0M-15 651c71-6 133 1 182-4s87-2 133 0M518 654c98-8 191 1 300-5" stroke-width="2"/></g>
+  <g stroke="#ffdcb4" stroke-opacity=".42"><path d="M75 143h153M547 169h177M103 176h74M560 136h83"/></g>
+  <path d="M0 560h800v240H0z" fill="url(#shade)"/>
+  <g fill="#ffead1" font-family="Arial,Helvetica,sans-serif"><text x="58" y="83" font-size="15" letter-spacing="4">PULSE LAB / ORIGINAL 004</text><text x="61" y="677" font-size="73" font-weight="700" letter-spacing="1">SUNSET</text><text x="61" y="746" font-size="73" font-weight="700" letter-spacing="1">SIP</text><text x="530" y="738" font-size="14" letter-spacing="2">106 / SLOW THE TIDE</text></g>
+</svg>

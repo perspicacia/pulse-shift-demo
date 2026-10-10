@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-labelledby="title desc">
+  <title id="title">MIRAGE BLOOM 원형 LP 아트</title>
+  <desc id="desc">금빛 꽃과 사막 물결을 원판 전체에 인쇄한 MIRAGE BLOOM 아트. 제목은 원형 안전 영역 안에 배치했습니다.</desc>
+  <defs>
+    <radialGradient id="night" cx="50%" cy="38%" r="78%"><stop stop-color="#243646"/><stop offset=".5" stop-color="#152632"/><stop offset="1" stop-color="#08131f"/></radialGradient>
+    <radialGradient id="aura"><stop stop-color="#dfbd78" stop-opacity=".5"/><stop offset=".4" stop-color="#96aba4" stop-opacity=".15"/><stop offset="1" stop-color="#112332" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gold" x2="1" y2="1"><stop stop-color="#f0d9a6"/><stop offset=".48" stop-color="#b9c4b5"/><stop offset="1" stop-color="#c68d57"/></linearGradient>
+    <linearGradient id="fade" x1="0" y1="500" x2="0" y2="760" gradientUnits="userSpaceOnUse"><stop stop-color="#08131f" stop-opacity="0"/><stop offset="1" stop-color="#08131f" stop-opacity=".9"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <path fill="url(#night)" d="M0 0h800v800H0z"/>
+  <circle cx="400" cy="340" r="350" fill="url(#aura)"/>
+  <circle cx="400" cy="400" r="373" fill="none" stroke="#f0d9a6" stroke-opacity=".18"/>
+  <circle cx="400" cy="319" r="170" fill="none" stroke="#f0d9a6" stroke-opacity=".12"/>
+  <circle cx="400" cy="319" r="146" fill="none" stroke="#f0d9a6" stroke-opacity=".08"/>
+  <g fill="none" stroke="url(#gold)" transform="translate(400 334)">
+    <g stroke-width="8" opacity=".23" filter="url(#glow)"><path d="M0 132C-131 38-125-98 0-150C125-98 131 38 0 132Z"/><path d="M0 132C-201 88-201-33-93-58C-41-9-10 63 0 132Z"/><path d="M0 132C201 88 201-33 93-58C41-9 10 63 0 132Z"/></g>
+    <g stroke-width="1.8"><path d="M0 132C-131 38-125-98 0-150C125-98 131 38 0 132Z"/><path d="M0 132C-201 88-201-33-93-58C-41-9-10 63 0 132Z"/><path d="M0 132C201 88 201-33 93-58C41-9 10 63 0 132Z"/><path d="M0 132C-97 27-42-47 0-95C42-47 97 27 0 132Z" stroke-opacity=".6"/></g>
+    <path d="M0 132V-150" stroke-width=".8" stroke-opacity=".45"/>
+    <circle cy="132" r="6" fill="#ead8ae" stroke="none"/>
+  </g>
+  <g fill="none" stroke="#dcc5a0" stroke-width="1.2" stroke-opacity=".26"><path d="M-40 513C138 394 243 509 421 501C599 493 637 428 839 479"/><path d="M-40 539C138 422 243 539 421 531C599 523 637 457 839 508"/><path d="M-40 568C138 451 243 570 421 560C599 550 637 486 839 537"/></g>
+  <path d="M0 500h800v300H0z" fill="url(#fade)"/>
+  <g fill="#efdfc2" font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="400" y="115" font-size="18" letter-spacing="4">PULSE LAB / 005</text>
+    <text x="400" y="638" font-size="43" font-weight="700" letter-spacing="3">MIRAGE BLOOM</text>
+    <text x="400" y="679" font-size="17" letter-spacing="3">ORIGINAL / 112 BPM</text>
+  </g>
+</svg>

@@ -8,11 +8,12 @@
 
 ## 주요 기능
 
-- 오리지널 곡 **AFTERGLOW · TIDAL CIRCUIT · ASTRAL VEIL**.
+- 오리지널 곡 **AFTERGLOW · TIDAL CIRCUIT · ASTRAL VEIL · SUNSET SIP · MIRAGE BLOOM**.
 - 모든 곡의 **4키 LEVEL 1·2·3**, **6키 실험은 AFTERGLOW LEVEL 1 / ASTRAL VEIL LEVEL 2·3** 지원.
 - LP 곡 선택, 선택곡 자동 미리듣기, 원근형 레인과 타격 효과.
 - 판정·콤보·점수·정확도 및 곡·키 개수·레벨별 최고 기록 저장.
 - 노트 속도·싱크 보정, 음악·효과음 음량과 이펙트 설정.
+- 방 코드로 접속하는 **2인 멀티 대결 실험**. 같은 곡·4키·같은 레벨로 시작하고 상대 점수·콤보·정확도를 비교합니다. [접속·공동 시작·제한](docs/MULTIPLAYER.md)
 
 이 브랜치는 **개인 음악 불러오기 실험**도 제공합니다. 시작 화면에서 파일을 선택하고, BPM·첫 박 위치를 보정한 뒤 **10초 테스트** 또는 4/6키 LEVEL 1·2·3으로 플레이하세요. 음악은 서버로 보내지 않습니다. **40MB 이하·12초~5분**의 모노/스테레오 파일을 지원하며, 박자가 일정한 곡에 적합합니다. [사용법과 자동 분석의 한계](docs/PERSONAL_MUSIC.md). 이 기능은 아래 명령으로 실험 브랜치를 로컬 실행할 때 사용할 수 있습니다. 위 공개 게임 사이트는 main 버전입니다.
 
@@ -21,12 +22,16 @@
 위 게임 사이트에서 바로 플레이할 수 있습니다. 로컬 실행은 **Node.js 22 이상**이 필요하며, 별도 패키지 설치는 필요하지 않습니다.
 
 ```sh
-git clone --branch codex/personal-music-sync https://github.com/perspicacia/pulse-shift-demo.git
+git clone --branch codex/original-duo-multiplayer https://github.com/perspicacia/pulse-shift-demo.git
 cd pulse-shift-demo
 npm run dev
 ```
 
 Chrome에서 `http://localhost:4173`을 엽니다. 소리는 첫 클릭이나 키 입력 후 재생됩니다.
+
+새 곡 **SUNSET SIP**(106 BPM)은 따뜻한 누재즈 라운지, **MIRAGE BLOOM**(112 BPM)은 플루트와 손 타악의 몽환적인 월드 라운지입니다. 두 곡 모두 자체 악보·합성 음악·앨범 아트를 사용합니다. [음악 설명](docs/SUNSET_SIP.md) · [MIRAGE BLOOM](docs/MIRAGE_BLOOM.md)
+
+멀티플레이는 위 Node 서버로 실행할 때 사용할 수 있습니다. 공개 GitHub Pages에는 서버가 없으므로 솔로로 플레이합니다. 각자 **같은 서버 주소**에서 게임을 열고 방을 만들거나 방 코드로 참가한 뒤, 두 사람 모두 준비를 누릅니다. 개인 음악은 솔로에서만 사용합니다.
 
 | 기능 | 조작 |
 | --- | --- |
