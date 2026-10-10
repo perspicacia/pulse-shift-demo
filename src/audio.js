@@ -102,7 +102,7 @@ export class AudioEngine {
 
   removeBuffer(id) { this.musicBuffers.delete(id); this.musicReady.delete(id); }
 
-  play({ countdown = 0, offset = 0, buffer = this.buffer } = {}) {
+  play({ countdown = 0, offset = 0, buffer = this.buffer, startAt = null } = {}) {
     if (!buffer) throw new Error('먼저 음악을 준비해주세요.');
     this.stopLobby();
     this.stop();
@@ -112,10 +112,19 @@ export class AudioEngine {
     this.source.buffer = buffer;
     this.source.connect(this.musicBus || this.master);
     this.offset = offset;
-    this.startTime = this.context.currentTime + countdown + 0.12;
+    this.startTime = startAt ?? this.context.currentTime + countdown + 0.12;
     this.source.start(this.startTime, offset);
     this.pausedTime = null;
     this.pausedContextTime = null;
+  }
+
+  playAt(buffer, targetPerformanceTime) {
+    if (!Number.isFinite(targetPerformanceTime) || this.context?.state !== 'running') throw new Error('오디오를 활성화한 뒤 다시 준비해주세요.');
+    // Map the common audible start to the device's output clock. Network time
+    // selects this one deadline; judgments continue to use the local music clock.
+    const startAt = this.outputTime(targetPerformanceTime);
+    if (startAt - this.context.currentTime < .05) throw new Error('공동 시작 시각을 놓쳤어요. 방에서 다시 준비해주세요.');
+    this.play({ buffer, startAt });
   }
 
   outputTime(atPerformanceTime) {

@@ -78,6 +78,33 @@ test('audible output timestamps map an input event onto the music timeline', () 
   assert.ok(Math.abs(audio.time(perf + 20) - 7.02) < 1e-9);
 });
 
+test('a shared audible deadline schedules music once without the solo startup padding', () => {
+  const audio = new AudioEngine(), context = feedbackContext(), perf = performance.now();
+  context.currentTime = 10.05;
+  context.getOutputTimestamp = () => ({ contextTime: 10, performanceTime: perf });
+  audio.context = context; audio.musicBus = context.createGain();
+  const buffer = context.createBuffer(2, 48000, 48000);
+  audio.playAt(buffer, perf + 4000);
+  assert.equal(audio.source.buffer, buffer);
+  assert.equal(audio.source.started, 14);
+  assert.equal(audio.startTime, 14);
+  assert.equal(audio.time(perf + 4000), 0);
+  assert.ok(Math.abs(audio.time(perf + 4020) - .02) < 1e-9);
+});
+
+test('missed or suspended shared starts fail before replacing the active music', () => {
+  const audio = new AudioEngine(), context = feedbackContext(), perf = performance.now();
+  context.currentTime = 10.05;
+  context.getOutputTimestamp = () => ({ contextTime: 10, performanceTime: perf });
+  audio.context = context; const previous = {}; audio.source = previous;
+  assert.throws(() => audio.playAt({}, perf + 20), /공동 시작/);
+  assert.equal(audio.source, previous);
+  context.state = 'suspended';
+  assert.throws(() => audio.playAt({}, perf + 4000), /오디오/);
+  assert.throws(() => audio.playAt({}, NaN), /오디오/);
+  assert.equal(audio.source, previous);
+});
+
 test('a personal decoded buffer previews and plays locally without fetch or synthesis', async () => {
   const originalWindow = globalThis.window, originalWorker = globalThis.Worker, originalFetch = globalThis.fetch;
   const context = feedbackContext();

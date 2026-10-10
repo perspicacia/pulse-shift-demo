@@ -6,6 +6,7 @@ import { highwayGeometry, drawHighway } from './highway.js';
 import { LobbyMusic } from './lobby-music.js';
 import { SelectedPreview } from './selected-preview.js';
 import { PersonalMusic } from './personal-music.js';
+import { Multiplayer } from './multiplayer.js';
 import { personalTestRange } from './personal-analysis.js';
 import { keysFor, chartFor, modeRecordKey, sixKeyDifficulty, sixKeyDifficulties } from './modes.js';
 
@@ -14,7 +15,7 @@ const audio = new AudioEngine();
 const effects = new HitEffects();
 const popAnimations = new Map();
 let activeTrack = BUILTIN_TRACKS[0];
-let personalTrack = null, testRange = null;
+let personalTrack = null, testRange = null, multiGame = false;
 const catalog = () => personalTrack ? [...BUILTIN_TRACKS, personalTrack] : BUILTIN_TRACKS;
 const supportedSix = () => activeTrack.personal ? Object.keys(DIFFICULTIES) : sixKeyDifficulties(activeTrack.id);
 const colors = { perfect: '#d5ff56', great: '#83e8f0', good: '#ffc984', miss: '#ff888f', empty: '#ff888f', hold: '#83e8f0' };
@@ -49,31 +50,63 @@ const inputKeys = () => keysFor(settings.keyCount);
 const activeChart = () => chartFor(activeTrack, settings.keyCount, settings.difficulty);
 let lobbyStatus = 'idle';
 const selectedPreview = new SelectedPreview(audio, {
-  canPlay: () => state === 'menu' && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && !$('personal-dialog').open && settings.volume > 0,
+  canPlay: () => state === 'menu' && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && !$('personal-dialog').open && !$('multi-dialog').open && settings.volume > 0,
   onState: () => { lobby.sync(); renderMenuMusic(); },
   onError: error => { $('menu-error').textContent = error.message; $('menu-error').hidden = false; },
 });
 const lobby = new LobbyMusic(audio, {
   enabled: settings.lobbyEnabled,
-  canPlay: () => state === 'menu' && !selectedPreview.track && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && !$('personal-dialog').open && settings.lobbyVolume > 0,
+  canPlay: () => state === 'menu' && !selectedPreview.track && !document.hidden && !$('settings-dialog').open && !$('help-dialog').open && !$('personal-dialog').open && !$('multi-dialog').open && settings.lobbyVolume > 0,
   onState: status => { lobbyStatus = status; renderMenuMusic(); },
   onError: error => toast(error.message),
 });
 
 const personalMusic = new PersonalMusic(audio, {
-  canImport: () => state === 'menu',
+  canImport: () => state === 'menu' && !multiplayer.inRoom,
   onDialog: syncMenuMusic,
   onTest: position => start({ test: true, testPosition: position }),
   readProfiles: () => { const profiles = read('pulse-shift-personal-calibration-v1', {}); return profiles && typeof profiles === 'object' && !Array.isArray(profiles) ? profiles : {}; },
   writeProfiles: profiles => { if (!write('pulse-shift-personal-calibration-v1', profiles)) toast('보정값을 저장하지 못했어요. 이번 화면에서는 사용할 수 있어요.'); },
   onApply: track => {
     const previous = personalTrack;
-    personalTrack = track;
+    personalTrack = { ...track, number: String(BUILTIN_TRACKS.length + 1).padStart(3, '0') };
     renderPersonalCard();
-    selectTrack(track);
+    selectTrack(personalTrack);
     if (previous && previous.id !== track.id) audio.removeBuffer(previous.id);
   },
 });
+
+const multiplayer = new Multiplayer(BUILTIN_TRACKS, {
+  canOpen: () => ['menu', 'result'].includes(state),
+  onPrepare: prepareAudio,
+  onStart: beginMultiplayer,
+  onAbort: message => {
+    if (multiGame) { multiGame = false; menu(); }
+    toast(message);
+  },
+  onPresence: connected => {
+    $('personal-open').disabled = connected; $('personal-calibrate').disabled = connected; $('personal-remove').disabled = connected;
+    $('start-label').textContent = connected ? '멀티 방에서 준비하기' : '플레이 시작';
+    $('retry-button').textContent = connected ? '멀티 재대전 준비' : '다시 플레이';
+    syncMenuMusic();
+  },
+  onDialog: syncMenuMusic,
+  onReplay: () => { multiGame = false; menu(); },
+});
+
+function renderBuiltinCards() {
+  for (const [index, track] of BUILTIN_TRACKS.entries()) {
+    if ($(track.buttonId)) continue;
+    const card = document.createElement('button'); card.id = track.buttonId; card.className = 'disc-card'; card.dataset.discCard = ''; card.dataset.builtinTrack = track.id;
+    card.innerHTML = '<span class="disc-card-art"><img alt="" width="800" height="800"><img class="disc-record-art" alt="" width="800" height="800"><span class="disc-gloss"></span><span class="disc-hub"></span></span><span class="disc-card-caption"><span class="track-index"></span><strong></strong><small></small></span><span class="selection-label" hidden>선택하기</span>';
+    card.querySelector('.disc-card-art > img').src = track.cover;
+    card.querySelector('.disc-record-art').src = track.discCover || track.cover.replace('.svg', '-disc.svg');
+    card.querySelector('.track-index').textContent = `${String(index + 1).padStart(2, '0')} / ORIGINAL`;
+    card.querySelector('strong').textContent = track.title; card.querySelector('small').textContent = `${track.artist} · ${track.bpm} BPM`;
+    card.setAttribute('aria-label', `오리지널 곡 ${track.title} 선택`); document.querySelector('.disc-rack').append(card);
+  }
+}
+renderBuiltinCards();
 
 function renderPersonalCard() {
   let card = $('personal-track');
@@ -83,6 +116,7 @@ function renderPersonalCard() {
     card.addEventListener('click', () => selectTrack(personalTrack));
     document.querySelector('.disc-rack').append(card);
   }
+  card.querySelector('.track-index').textContent = `${String(BUILTIN_TRACKS.length + 1).padStart(2, '0')} / MY MUSIC`;
   card.setAttribute('aria-label', `개인 음악 ${personalTrack.title} 선택`);
   card.querySelector('.disc-card-caption strong').textContent = personalTrack.title;
   card.querySelector('.disc-card-caption small').textContent = `MY MUSIC · ${personalTrack.bpm} BPM`;
@@ -333,7 +367,10 @@ function clearHeld() {
 
 async function start({ test = false, testPosition = 'start' } = {}) {
   if (!['menu', 'result'].includes(state)) return;
+  if (multiplayer.inRoom) { multiplayer.open(); return; }
+  multiGame = false;
   state = 'loading';
+  $('pause-button').innerHTML = '<svg aria-hidden="true"><use href="#i-pause"/></svg>일시정지 <kbd>ESC</kbd>';
   const token = ++actionToken;
   syncMenuMusic();
   $('menu-error').hidden = true;
@@ -378,8 +415,27 @@ async function start({ test = false, testPosition = 'start' } = {}) {
   }
 }
 
+function beginMultiplayer({ buffer, track, difficulty, targetPerformanceTime }) {
+  actionToken++;
+  if ($('pause-dialog').open) $('pause-dialog').close();
+  state = 'menu'; activeTrack = track; settings.keyCount = 4; settings.difficulty = difficulty;
+  selectedPreview.invalidate(); updateTrack();
+  multiGame = true; testRange = null; session = new Session(difficulty, activeChart());
+  clearEffects(); laneFlashes.fill(0); clearHeld(); lastNoteIndex = 0; lastFeedback = 0;
+  for (const id of ['judgment-label', 'combo-label', 'combo-caption', 'timing-label']) $(id).textContent = '';
+  $('play-elapsed').textContent = '00:00'; $('play-progress').style.width = '0%';
+  $('game-difficulty').textContent = `${DIFFICULTIES[difficulty].label} · DUO`;
+  $('stage-speed').textContent = `SPEED ×${settings.speed.toFixed(1)}`;
+  $('play-duration').textContent = formatTime(track.duration);
+  $('pause-button').innerHTML = '경기 중단 <kbd>ESC</kbd>';
+  audio.playAt(buffer, targetPerformanceTime);
+  state = 'playing'; screen('game'); resizeCanvas(); updateLive();
+  $('pause-button').focus({ preventScroll: true });
+}
+
 async function pause() {
   if (state !== 'playing') return;
+  if (multiGame) { multiplayer.cancel('멀티 경기를 중단했어요. 방에서 다시 준비해주세요.'); return; }
   for (const event of session.expire(audio.time() - settings.offset / 1000)) feedback(event);
   state = 'pausing';
   session.suspendHolds();
@@ -427,6 +483,8 @@ async function resume() {
 }
 
 function menu() {
+  if (multiGame && multiplayer.playing && state === 'playing') { multiplayer.cancel(); return; }
+  multiGame = false;
   actionToken++;
   audio.stop();
   state = 'menu';
@@ -446,7 +504,7 @@ function finish() {
   clearHeld();
   clearEffects();
   const previous = currentRecord();
-  const newBest = !testRange && (!previous || session.score > previous.score);
+  const newBest = !testRange && !multiGame && (!previous || session.score > previous.score);
   if (newBest) {
     records[recordKey()] = { score: session.score, accuracy: session.accuracy, grade: session.grade, maxCombo: session.maxCombo };
     if (!write('pulse-shift-records', records)) toast('기록 저장이 차단되어 이번 결과만 표시돼요.');
@@ -458,8 +516,9 @@ function finish() {
   $('result-combo').textContent = session.maxCombo;
   for (const [type, count] of Object.entries(session.counts)) $(`result-${type}`).textContent = count;
   $('new-record').hidden = !newBest || session.score === 0;
-  $('clear-status').textContent = testRange ? 'SYNC TEST · 기록 저장 안 함' : session.fullCombo ? 'FULL COMBO' : `TRACK FINISHED${session.emptyPresses ? ` · EMPTY ${session.emptyPresses}` : ''}`;
+  $('clear-status').textContent = multiGame ? 'DUO PLAY · 솔로 기록 저장 안 함' : testRange ? 'SYNC TEST · 기록 저장 안 함' : session.fullCombo ? 'FULL COMBO' : `TRACK FINISHED${session.emptyPresses ? ` · EMPTY ${session.emptyPresses}` : ''}`;
   $('result-message').textContent = testRange ? '테스트 완료. 박자·노트 보정에서 조정해보세요.' : { S: '완벽에 가까운 비트.', A: '리듬을 제대로 탔어요.', B: '좋은 리듬이었어요.', C: '조금씩 비트가 맞아가요.', D: '다음 비트는 더 가까이.' }[session.grade];
+  if (multiGame) multiplayer.finish(session);
   screen('result');
   $('retry-button').focus({ preventScroll: true });
 }
@@ -647,6 +706,7 @@ function frame(now) {
   if (feedbackType && now - lastFeedback > 650) $('judgment-label').style.opacity = Math.max(0, 1 - (now - lastFeedback - 650) / 250);
   if (now - uiTime > 80) {
     uiTime = now;
+    if (multiGame && state === 'playing') multiplayer.stats(session);
     const duration = testRange ? testRange.to - testRange.from : activeTrack.duration;
     $('play-elapsed').textContent = formatTime(Math.min(elapsed, duration));
     $('play-progress').style.width = `${clamp(elapsed / duration * 100, 0, 100, 0)}%`;
@@ -659,7 +719,7 @@ for (const button of document.querySelectorAll('button[data-key-count]')) button
   updateSettings();
 });
 $('start-button').addEventListener('click', start);
-$('retry-button').addEventListener('click', () => start({ test: Boolean(testRange), testPosition: testRange?.position }));
+$('retry-button').addEventListener('click', () => multiplayer.inRoom ? multiplayer.replay() : start({ test: Boolean(testRange), testPosition: testRange?.position }));
 $('return-button').addEventListener('click', menu);
 $('preview-button').addEventListener('click', preview);
 $('pause-button').addEventListener('click', pause);
@@ -731,7 +791,7 @@ for (const dialog of [$('settings-dialog'), $('help-dialog')]) dialog.addEventLi
 
 window.addEventListener('keydown', event => {
   if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
-  if ($('settings-dialog').open || $('help-dialog').open || $('personal-dialog').open) return;
+  if ($('settings-dialog').open || $('help-dialog').open || $('personal-dialog').open || $('multi-dialog').open) return;
   // Keep native slider/text editing keys; song navigation only operates in the menu.
   if (state === 'menu' && ['ArrowLeft', 'ArrowRight'].includes(event.code) && !event.target.closest('input, select, textarea, [contenteditable="true"]')) {
     event.preventDefault();
@@ -789,7 +849,7 @@ for (const button of laneButtons) {
 for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type, event => {
   for (const token of [...held]) if (token.startsWith('pointer-') && token.endsWith(`-${event.pointerId}`)) release(Number(token.split('-')[1]), token, inputTimestamp(event));
 });
-window.addEventListener('blur', () => { clearHeld(); if (state === 'playing') pause(); });
+window.addEventListener('blur', () => { clearHeld(); if (state === 'playing' && !multiGame) pause(); });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { clearHeld(); if (state === 'playing') pause(); }
   syncMenuMusic();

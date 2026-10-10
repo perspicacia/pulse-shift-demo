@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">SUNSET SIP 원형 LP 아트</title><desc id="desc">원판 전체를 채우는 따뜻한 노을과 바다의 빛. 제목은 원형 안전 영역 안에 배치한 자체 제작 아트.</desc>
+  <defs>
+    <linearGradient id="sky" x2="0" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#242440"/><stop offset=".34" stop-color="#85516e"/><stop offset=".58" stop-color="#e69c83"/><stop offset=".59" stop-color="#27585f"/><stop offset="1" stop-color="#122d38"/></linearGradient>
+    <linearGradient id="sun" x1="0" y1="190" x2="0" y2="435" gradientUnits="userSpaceOnUse"><stop stop-color="#fff0b8"/><stop offset="1" stop-color="#f7b57b"/></linearGradient>
+    <linearGradient id="reflection" x1="0" y1="420" x2="0" y2="725" gradientUnits="userSpaceOnUse"><stop stop-color="#ffd5a0" stop-opacity=".9"/><stop offset="1" stop-color="#ffb585" stop-opacity="0"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#f3c391" stop-opacity=".36"/><stop offset="1" stop-color="#f3c391" stop-opacity="0"/></radialGradient>
+    <linearGradient id="shade" x1="0" y1="530" x2="0" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#10232d" stop-opacity="0"/><stop offset="1" stop-color="#10232d" stop-opacity=".94"/></linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h800v800H0z"/>
+  <circle cx="400" cy="325" r="285" fill="url(#glow)"/><circle cx="400" cy="308" r="115" fill="url(#sun)"/>
+  <path d="M0 407c135 7 222-7 400 0s299-3 400 0v393H0z" fill="#204b55"/>
+  <g stroke-linecap="round" stroke="url(#reflection)"><path d="M345 434h110M330 450h140M348 469h104M318 491h164M334 513h132M305 539h190M329 565h142M292 591h216M311 621h178M287 653h226M266 690h268" stroke-width="5"/></g>
+  <g stroke="#8cc3b9" stroke-opacity=".36" stroke-linecap="round"><path d="M-35 473c68-8 119 5 187-2s120-1 178 4M480 474c77-5 112 5 174 0s122-6 174-2M-15 556c58-4 82 3 147-4s109-5 163-1M515 552c58-7 103 3 157-3s113-2 158 0M-15 651c71-6 133 1 182-4s87-2 133 0M518 654c98-8 191 1 300-5" stroke-width="2"/></g>
+  <path d="M0 530h800v270H0z" fill="url(#shade)"/><circle cx="400" cy="400" r="376" stroke="#ffe2b8" stroke-opacity=".22"/>
+  <g fill="#ffead1" font-family="Arial,Helvetica,sans-serif" text-anchor="middle"><text x="400" y="116" font-size="18" letter-spacing="4">PULSE LAB / 004</text><text x="400" y="637" font-size="58" font-weight="700" letter-spacing="2">SUNSET SIP</text><text x="400" y="681" font-size="17" letter-spacing="3">ORIGINAL / 106 BPM</text></g>
+</svg>

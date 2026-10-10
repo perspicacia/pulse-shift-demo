@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-labelledby="title desc">
+  <title id="title">MIRAGE BLOOM</title>
+  <desc id="desc">짙은 남색 사막 위에 금빛 꽃과 물결이 떠오르는 오리지널 월드 라운지 앨범 커버</desc>
+  <defs>
+    <linearGradient id="night" x2="0" y2="1"><stop stop-color="#10273b"/><stop offset=".55" stop-color="#152332"/><stop offset="1" stop-color="#080f1c"/></linearGradient>
+    <radialGradient id="aura"><stop stop-color="#d7b36e" stop-opacity=".5"/><stop offset=".4" stop-color="#869ca3" stop-opacity=".12"/><stop offset="1" stop-color="#112332" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gold" x2="1" y2="1"><stop stop-color="#f0d9a6"/><stop offset=".48" stop-color="#b9c4b5"/><stop offset="1" stop-color="#c68d57"/></linearGradient>
+    <linearGradient id="sand" x2="0" y2="1"><stop stop-color="#988367" stop-opacity=".22"/><stop offset="1" stop-color="#182a37" stop-opacity=".14"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <path fill="url(#night)" d="M0 0h800v800H0z"/>
+  <circle cx="400" cy="323" r="310" fill="url(#aura)"/>
+  <circle cx="400" cy="295" r="160" fill="none" stroke="#f0d9a6" stroke-opacity=".12"/>
+  <circle cx="400" cy="295" r="137" fill="none" stroke="#f0d9a6" stroke-opacity=".07"/>
+  <g fill="none" stroke="url(#gold)" transform="translate(400 304)">
+    <g stroke-width="8" opacity=".23" filter="url(#glow)"><path d="M0 123C-123 36-117-91 0-141C117-91 123 36 0 123Z"/><path d="M0 123C-187 83-188-31-87-54C-38-8-9 59 0 123Z"/><path d="M0 123C187 83 188-31 87-54C38-8 9 59 0 123Z"/></g>
+    <g stroke-width="1.6"><path d="M0 123C-123 36-117-91 0-141C117-91 123 36 0 123Z"/><path d="M0 123C-187 83-188-31-87-54C-38-8-9 59 0 123Z"/><path d="M0 123C187 83 188-31 87-54C38-8 9 59 0 123Z"/><path d="M0 123C-91 25-39-44 0-89C39-44 91 25 0 123Z" stroke-opacity=".6"/></g>
+    <path d="M0 123V-141" stroke-width=".8" stroke-opacity=".45"/>
+    <circle cy="123" r="6" fill="#ead8ae" stroke="none"/>
+  </g>
+  <path d="M0 479C154 368 247 452 400 470C561 489 641 390 800 426V800H0Z" fill="url(#sand)"/>
+  <g fill="none" stroke="#dcc5a0" stroke-width="1" stroke-opacity=".26"><path d="M-40 506C138 387 243 502 421 494C599 486 637 421 839 472"/><path d="M-40 526C138 410 243 527 421 518C599 509 637 445 839 495"/><path d="M-40 549C138 435 243 552 421 544C599 536 637 470 839 521"/><path d="M-40 575C138 462 243 581 421 571C599 561 637 498 839 548"/></g>
+  <g fill="#edd9b2" opacity=".68"><circle cx="161" cy="166" r="1.5"/><circle cx="637" cy="185" r="2"/><circle cx="585" cy="97" r="1"/><circle cx="231" cy="279" r="1"/><circle cx="676" cy="342" r="1.4"/></g>
+  <g font-family="Arial,Helvetica,sans-serif" fill="#efdfc2">
+    <text x="52" y="64" font-size="16" letter-spacing="4">PULSE LAB / ORIGINAL 005</text>
+    <text x="52" y="655" font-size="60" font-weight="700" letter-spacing="4">MIRAGE</text>
+    <text x="52" y="720" font-size="60" font-weight="700" letter-spacing="4">BLOOM</text>
+    <text x="748" y="742" text-anchor="end" font-size="13" letter-spacing="2" fill="#aaa999">112 / WHERE THE AIR SINGS</text>
+  </g>
+</svg>
