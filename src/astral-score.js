@@ -58,7 +58,10 @@ export function createAstralChart(difficulty = 'normal') {
     const accent = Math.floor(event.beat / 4) % 4 === 3;
     const allowChord = difficulty === 'hard' || difficulty === 'normal' && accent && event.voice === 'snare';
     if (chord ? !allowChord || simultaneous >= 2 : event.time - previous < gap) continue;
-    const startLane = event.voice === 'kick' ? Math.floor(event.beat / 4) % 2 * 3 : event.voice === 'snare' ? 1 + Math.floor(event.beat / 8) % 2 : (index + Math.floor(event.beat / 16)) % 4;
+    // LEVEL 1 is mostly kicks; alternate hands across all four lanes instead of
+    // parking each bar's kicks on one outer lane.
+    const startLane = difficulty === 'easy' ? [0, 2, 1, 3][notes.length % 4]
+      : event.voice === 'kick' ? Math.floor(event.beat / 4) % 2 * 3 : event.voice === 'snare' ? 1 + Math.floor(event.beat / 8) % 2 : (index + Math.floor(event.beat / 16)) % 4;
     const lane = Array.from({ length: 4 }, (_, i) => (startLane + i) % 4).find(lane => event.time - lastLane[lane] >= 0.2);
     if (lane === undefined) continue;
     notes.push({ time: event.time, lane, id: notes.length, judged: false });

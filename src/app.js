@@ -119,7 +119,9 @@ function updateBest() {
 
 function recordKey() { return modeRecordKey(activeTrack.id, settings.difficulty, settings.keyCount); }
 function currentRecord() {
-  return records[recordKey()] || (settings.keyCount === 4 ? records[`${activeTrack.id}:${settings.difficulty}`] || (activeTrack.id === 'afterglow' ? records[settings.difficulty] : null) : null);
+  // Legacy keys predate chart revisions, so only unrevised 4-key charts read them.
+  const key = recordKey(), legacy = key === `${activeTrack.id}:4k:${settings.difficulty}`;
+  return records[key] || (legacy ? records[`${activeTrack.id}:${settings.difficulty}`] || (activeTrack.id === 'afterglow' ? records[settings.difficulty] : null) : null);
 }
 
 function updateTrack() {

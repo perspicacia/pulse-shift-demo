@@ -94,6 +94,8 @@ export function chartFor(track, keyCount, difficulty) {
 }
 
 export function modeRecordKey(trackId, difficulty, keyCount) {
-  const revision = trackId === 'astral-veil' && keyCount === 6 && difficulty === 'normal' ? ':hold-v1' : '';
+  // A revised chart gets a new key so older scores on the previous layout are not compared.
+  const revision = trackId === 'astral-veil' && keyCount === 6 && difficulty === 'normal' ? ':hold-v1'
+    : trackId === 'astral-veil' && keyCount === 4 && difficulty === 'easy' ? ':lanes-v2' : '';
   return `${trackId}:${keyCount}k:${difficulty}${revision}`;
 }
