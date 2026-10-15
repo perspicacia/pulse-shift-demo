@@ -135,3 +135,17 @@ test('retry starts a fresh combo reward schedule and short charts have no unreac
   assert.deepEqual(rewards, [10]);
   assert.equal(new Session('easy', chart.slice(0, 9)).nextComboMilestone, 0);
 });
+
+test('overlapping same-lane windows judge the nearest note instead of stealing the earlier one', () => {
+  const session = new Session('hard', [{ time: 1, lane: 0 }, { time: 1.18, lane: 0 }]);
+  const early = session.hit(0, 1.13);
+  assert.equal(early.time, 1.18);
+  assert.equal(early.type, 'great');
+  assert.equal(session.notes[0].judged, false);
+  // The skipped earlier note still expires as its own MISS.
+  assert.deepEqual(session.expire(1.15).map(event => [event.type, event.time]), [['miss', 1]]);
+  // A late press closer to the earlier note still hits that earlier note.
+  const late = new Session('hard', [{ time: 1, lane: 0 }, { time: 1.18, lane: 0 }]);
+  assert.equal(late.hit(0, 1.08).time, 1);
+  assert.equal(late.notes[1].judged, false);
+});

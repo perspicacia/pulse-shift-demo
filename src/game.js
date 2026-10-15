@@ -86,7 +86,13 @@ export class Session {
   hit(lane, time) {
     this.expire(time);
     if (this.activeHolds.has(lane)) return null;
-    const note = this.notes.find(item => !item.judged && item.lane === lane && Math.abs(time - item.time) <= (WINDOWS.good + 0.000001) / 1000);
+    // Same-lane windows can overlap in dense charts. Take the nearest note, so an
+    // early press for the next note does not steal the previous one as a late GOOD.
+    let note = null;
+    for (const item of this.notes) {
+      if (item.judged || item.lane !== lane || Math.abs(time - item.time) > (WINDOWS.good + 0.000001) / 1000) continue;
+      if (!note || Math.abs(time - item.time) < Math.abs(time - note.time)) note = item;
+    }
     if (!note) {
       // Ignore the lead-in and finished chart tail. During the playable chart,
       // a fresh press without a valid note breaks combo, without inventing a

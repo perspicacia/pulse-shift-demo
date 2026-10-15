@@ -58,3 +58,12 @@ test('ASTRAL VEIL has a quieter interlude, a returning beat, and a finite stereo
   assert.equal(Math.abs(left[0]), 0); assert.equal(Math.abs(right[0]), 0);
   assert.equal(Math.abs(left.at(-1)), 0); assert.equal(Math.abs(right.at(-1)), 0);
 });
+
+test('ASTRAL VEIL LEVEL 1 uses all four lanes evenly and keeps a separate record key', async () => {
+  const { modeRecordKey } = await import('../src/modes.js');
+  const lanes = Array(4).fill(0);
+  for (const note of createAstralChart('easy')) lanes[note.lane]++;
+  assert.ok(Math.min(...lanes) >= Math.max(...lanes) - 1, `lane counts ${lanes.join('/')}`);
+  assert.equal(modeRecordKey('astral-veil', 'easy', 4), 'astral-veil:4k:easy:lanes-v2');
+  assert.equal(modeRecordKey('astral-veil', 'normal', 4), 'astral-veil:4k:normal');
+});
