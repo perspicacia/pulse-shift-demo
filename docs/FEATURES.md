@@ -24,6 +24,8 @@ ASTRAL VEIL LEVEL 2·6키의 243노트에는 8개 롱노트가 포함됩니다. 
 - 오리지널 곡 **AFTERGLOW** — PULSE LAB, 148 BPM, 약 67초.
 - 오리지널 곡 **TIDAL CIRCUIT** — PULSE LAB, 132 BPM, 약 76초. 모듈러 신스·깊은 베이스·스윙이 있는 브로큰 비트.
 - 오리지널 곡 **ASTRAL VEIL** — PULSE LAB, 126 BPM, 약 72초. 어두운 전자 베이스·별빛 아르페지오·넓은 패드와 합성 코러스.
+- 오리지널 곡 **PRISM RUSH** — PULSE LAB, 172 BPM, 약 70초. 투스텝 드럼·리스 베이스·밝은 코드 스탭의 리퀴드 드럼 앤 베이스.
+- 오리지널 곡 **NEON BLOOM** — PULSE LAB, 112 BPM, 약 72초. 포 온 더 플로어 킥·옥타브 베이스·일렉트릭 피아노의 퓨처 펑크/누디스코.
 - 4키 LEVEL 1 / LEVEL 2 / LEVEL 3 난이도와 일반 노트, 동시 노트. 6키 실험은 AFTERGLOW LEVEL 1과 ASTRAL VEIL LEVEL 2·3 지원.
 - 노트 속도 ×1.0–×6.0, 싱크 보정 −200–+200 ms.
 - 판정선의 팝·링·별빛 입자와 판정·콤보 팝 애니메이션, 음정 없는 짧고 부드러운 타격음.
@@ -121,7 +123,7 @@ assets/neon-city.README.md 배경 제작 정보와 생성 프롬프트
 assets/afterglow.svg  오리지널 벡터 앨범 아트
 assets/tidal-circuit.svg TIDAL CIRCUIT 벡터 앨범 아트
 assets/astral-veil.svg ASTRAL VEIL 벡터 앨범 아트
-assets/*-disc.svg    세 곡의 원형 안전 영역을 적용한 LP 전체 아트
+assets/*-disc.svg    다섯 곡의 원형 안전 영역을 적용한 LP 전체 아트
 assets/sfx/README.md 자체 합성 효과음 안내
 src/game.js          곡 정보, 채보, 판정, 점수
 src/modes.js         4키 보존·AFTERGLOW/ASTRAL 6키 채보·모드별 기록 키

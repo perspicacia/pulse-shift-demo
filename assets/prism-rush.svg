@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none">
+  <defs>
+    <linearGradient id="bg" x2="800" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#14123a"/><stop offset=".55" stop-color="#0d1430"/><stop offset="1" stop-color="#070a1c"/></linearGradient>
+    <linearGradient id="glass" x1="400" y1="170" x2="400" y2="520" gradientUnits="userSpaceOnUse"><stop stop-color="#f4f2ff" stop-opacity=".55"/><stop offset="1" stop-color="#9aa8ff" stop-opacity=".08"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#9f8cff" stop-opacity=".22"/><stop offset="1" stop-color="#9f8cff" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" stroke="#d8d4ff" stroke-opacity=".05"/></pattern>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h800v800H0z"/><path fill="url(#grid)" d="M0 0h800v800H0z"/>
+  <circle cx="400" cy="360" r="330" fill="url(#halo)"/>
+  <path d="M60 372L330 352" stroke="#f6f4ff" stroke-width="5" stroke-linecap="round"/>
+  <g stroke-width="7" stroke-linecap="round">
+    <path d="M462 340L760 238" stroke="#ff7a8a"/>
+    <path d="M466 352L760 300" stroke="#ffb36b"/>
+    <path d="M468 364L760 362" stroke="#ffe27a"/>
+    <path d="M466 376L760 424" stroke="#9cf27e"/>
+    <path d="M462 388L760 486" stroke="#6fd8ff"/>
+    <path d="M456 400L760 548" stroke="#a48bff"/>
+  </g>
+  <path d="M400 170L540 500H260Z" fill="url(#glass)" stroke="#eef0ff" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M400 170L430 500M400 170L330 500" stroke="#eef0ff" stroke-opacity=".25" stroke-width="2"/>
+  <g fill="#eef0ff"><circle cx="150" cy="190" r="3"/><circle cx="640" cy="140" r="2"/><circle cx="210" cy="560" r="2"/><circle cx="700" cy="610" r="3"/></g>
+  <g stroke="#e3e0ff" stroke-opacity=".45"><path d="M40 86V40h46M714 40h46v46M40 714v46h46M714 760h46v-46"/><path d="M70 650h660M70 664h300M485 664h245"/></g>
+  <g fill="#e3e0ff" font-family="Arial, sans-serif" font-size="14" letter-spacing="4"><text x="57" y="89">PL / 004</text><text x="583" y="89">172 BPM</text><text x="57" y="713">PULSE LAB</text><text x="589" y="713">DNB / ORIGINAL</text></g>
+</svg>

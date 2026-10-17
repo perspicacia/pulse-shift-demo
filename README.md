@@ -8,7 +8,7 @@
 
 ## 주요 기능
 
-- 오리지널 곡 **AFTERGLOW · TIDAL CIRCUIT · ASTRAL VEIL**.
+- 오리지널 곡 **AFTERGLOW · TIDAL CIRCUIT · ASTRAL VEIL · PRISM RUSH · NEON BLOOM**.
 - 모든 곡의 **4키 LEVEL 1·2·3**, **6키 실험은 AFTERGLOW LEVEL 1 / ASTRAL VEIL LEVEL 2·3** 지원.
 - LP 곡 선택, 선택곡 자동 미리듣기, 원근형 레인과 타격 효과.
 - 판정·콤보·점수·정확도 및 곡·키 개수·레벨별 최고 기록 저장.

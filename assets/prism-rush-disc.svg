@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">PRISM RUSH 원형 LP 아트</title><desc id="desc">흰 빛이 유리 프리즘을 지나 여섯 색으로 갈라지는 PRISM RUSH LP 아트. 앨범 제목은 원형 인쇄 안전 영역 안에 배치했습니다.</desc>
+  <defs>
+    <linearGradient id="bg" x2="800" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#14123a"/><stop offset=".55" stop-color="#0d1430"/><stop offset="1" stop-color="#070a1c"/></linearGradient>
+    <linearGradient id="glass" x1="400" y1="170" x2="400" y2="520" gradientUnits="userSpaceOnUse"><stop stop-color="#f4f2ff" stop-opacity=".55"/><stop offset="1" stop-color="#9aa8ff" stop-opacity=".08"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#9f8cff" stop-opacity=".22"/><stop offset="1" stop-color="#9f8cff" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" stroke="#d8d4ff" stroke-opacity=".05"/></pattern>
+    <linearGradient id="print-fade" x1="0" y1="520" x2="0" y2="760" gradientUnits="userSpaceOnUse"><stop stop-color="#060b1400"/><stop offset=".6" stop-color="#060b14" stop-opacity=".76"/><stop offset="1" stop-color="#060b14" stop-opacity=".92"/></linearGradient>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h800v800H0z"/><path fill="url(#grid)" d="M0 0h800v800H0z"/>
+  <circle cx="400" cy="360" r="330" fill="url(#halo)"/>
+  <path d="M60 372L330 352" stroke="#f6f4ff" stroke-width="5" stroke-linecap="round"/>
+  <g stroke-width="7" stroke-linecap="round">
+    <path d="M462 340L760 238" stroke="#ff7a8a"/>
+    <path d="M466 352L760 300" stroke="#ffb36b"/>
+    <path d="M468 364L760 362" stroke="#ffe27a"/>
+    <path d="M466 376L760 424" stroke="#9cf27e"/>
+    <path d="M462 388L760 486" stroke="#6fd8ff"/>
+    <path d="M456 400L760 548" stroke="#a48bff"/>
+  </g>
+  <path d="M400 170L540 500H260Z" fill="url(#glass)" stroke="#eef0ff" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M400 170L430 500M400 170L330 500" stroke="#eef0ff" stroke-opacity=".25" stroke-width="2"/>
+  <g fill="#eef0ff"><circle cx="150" cy="190" r="3"/><circle cx="640" cy="140" r="2"/><circle cx="210" cy="560" r="2"/><circle cx="700" cy="610" r="3"/></g>
+  <path d="M0 520h800v280H0z" fill="url(#print-fade)"/>
+  <circle cx="400" cy="400" r="376" stroke="#e3e0ff" stroke-opacity=".2"/>
+  <g fill="#e3e0ff" font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="400" y="111" font-size="18" letter-spacing="4">PULSE LAB / 004</text>
+    <text x="400" y="641" font-size="48" font-weight="700" letter-spacing="3">PRISM RUSH</text>
+    <text x="400" y="681" font-size="17" letter-spacing="3">ORIGINAL / 172 BPM</text>
+  </g>
+</svg>
